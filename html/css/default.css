@@ -1,0 +1,374 @@
+/*
+	Design by TEMPLATED
+	http://templated.co
+	Released for free under the Creative Commons Attribution License
+*/
+
+/* Basic */
+
+* {
+	margin: 0em;
+	padding: 0em;
+}
+
+h1,
+h2 {}
+
+body {
+	font-family: Arial, sans-serif;
+	font-size: 10pt;
+	color: #666;
+	background-color: #fff;
+}
+
+a {
+	color: #0077dd;
+	text-decoration: underline;
+}
+
+a.female {
+	color: #ff0080;
+}
+
+a:hover {
+	text-decoration: none;
+}
+
+/* Outer */
+
+#outer {
+	padding: 0em;
+	margin: 0em;
+	width: 100%;
+}
+
+/* Header */
+
+#header {
+	position: relative;
+	background: #004778 url('images/a5.gif') bottom left repeat-x;
+	height: 5em;
+	padding-left: 2em;
+}
+
+#header h1 {
+	position: absolute;
+	top: 1.8em;
+	font-size: 2.2em;
+	letter-spacing: -0.05em;
+}
+
+#header h1 a {
+	color: #fff;
+	text-decoration: none;
+}
+
+#header h2 {
+	position: absolute;
+	font-size: 0.8em;
+	top: 8em;
+	color: #E0E8EF;
+}
+
+/* Menu */
+
+#menu {
+	position: absolute;
+	top: 2em;
+	left: 3em;
+}
+
+#menu ul {
+	list-style: none;
+}
+
+#menu li {
+	display: inline;
+	padding-left: 1.1em;
+	margin-left: 1em;
+	border-left: dotted 1px #E0E8EF;
+}
+
+#menu li.first {
+	border: 0em;
+	margin-left: 0em;
+	padding-left: 0em;
+}
+
+#menu li a {
+	color: #fff;
+	padding: 0.1em;
+	text-decoration: none;
+}
+
+#menu li a:hover {
+	text-decoration: underline;
+}
+
+/* Content */
+
+#content {
+	line-height: 1.5em;
+	background: #fff;
+}
+
+
+#content p {
+	margin-bottom: 1.5em;
+}
+
+#content h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	color: #545454;
+	margin-bottom: 1em;
+	border-bottom: dashed 1px #dfdfdf;
+	padding-bottom: 0.3em;
+}
+
+#content h1 {
+	font-size: 1.9em;
+}
+
+#content h2 {
+	font-size: 1.5em;
+}
+
+#content h3 {
+	font-size: 1.1em;
+}
+
+#content ul {
+	margin-bottom: 1.5em;
+	padding-left: 1em;
+	list-style: square;
+}
+
+#content div#chart1 {
+	width: 1200px;
+	height: 700px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+#content blockquote {
+	margin-bottom: 1.5em;
+	padding: 0.75em 0.75em 0.75em 1.5em;
+	border-left: solid 0.75em #005082;
+	background: #FDFDFD url('images/a7.gif') top left repeat-x;
+}
+
+#content blockquote p {
+	margin-bottom: 0em;
+}
+
+#content table {
+	margin-left: auto;
+	margin-right: auto;
+	margin-bottom: 1.5em;
+	border-collapse: collapse;
+	text-align: left;
+	font-family: Arial, sans-serif;
+	font-size: 10pt;
+	color: #666;
+}
+
+#content table th {
+	font-weight: bold;
+	padding: 0.5em;
+	text-align: center;
+	white-space: nowrap;
+	color: #fff;
+	background: #006192 url('images/a8.gif') top left repeat-x;
+	border-right: solid 1px #fff;
+}
+
+#content table th a {
+	color: #fff;
+}
+
+#content table th.second {
+	font-weight: bold;
+	padding: 0.5em;
+	text-align: center;
+	white-space: nowrap;
+	color: #fff;
+	background: #7fb0c8 url('images/a8.gif') top left repeat-x;
+	border-right: solid 1px #fff;
+}
+
+#content table td {
+	padding: 0.5em;
+	border-right: solid 1px #fff;
+	white-space: nowrap;
+}
+
+#content table td.right {
+	text-align: right;
+}
+
+#content table td.num {
+	text-align: right;
+}
+
+#content table td.cnum {
+	text-align: center;
+	white-space: nowrap;
+}
+
+#content table td.cnum a {
+	text-align: center;
+	white-space: nowrap;
+}
+
+#content table td.win {
+	color: green;
+}
+
+#content table td.win a {
+	color: green;
+}
+
+#content table td.draw {
+	color: blue;
+}
+
+#content table td.draw a {
+	color: blue;
+}
+
+#content table td.loss {
+	color: red;
+}
+
+#content table td.loss a {
+	color: red;
+}
+
+#content table tr:nth-child(1) {
+	color: #fff;
+	background: #006192 url('images/a8.gif') top left repeat-x;
+	border-right: solid 1px #fff;
+}
+
+#content table tr:nth-child(even) {
+	background: #F8F8F8 url('images/a6.gif') top left repeat-x;
+	border-top: solid 1px #fff;
+	color: inherit;
+}
+
+#content table tr:nth-child(2n+3) {
+	background: #FDFDFD url('images/a7.gif') top left repeat-x;
+	border-top: solid 1px #fff;
+	color: inherit;
+}
+
+#content table tr.rowH {
+	color: #fff;
+	background: #006192 url('images/a8.gif') top left repeat-x;
+	border-right: solid 1px #fff;
+}
+
+#content table tr.rowA {
+	background: #F8F8F8 url('images/a6.gif') top left repeat-x;
+	border-top: solid 1px #fff;
+	color: inherit;
+}
+
+#content table tr.rowB {
+	background: #FDFDFD url('images/a7.gif') top left repeat-x;
+	border-top: solid 1px #fff;
+	color: inherit;
+}
+
+#content img.flag {
+	width: 1.6em;
+	vertical-align: middle;
+	border: 1px solid #e5e5e5;
+}
+
+#content img.flag_large {
+	width: 3em;
+	vertical-align: middle;
+	border: 1px solid #e5e5e5;
+}
+
+#content iframe {
+	background: #FFFFFF;
+}
+
+#content pre {
+	display: block;
+	unicode-bidi: embed;
+	font-family: courier;
+	white-space: pre;
+}
+
+/* Primary Content */
+
+#primaryContentContainer {
+	float: right;
+	margin: 0em 0em 0em 0em;
+	width: 100%;
+}
+
+#primaryContent {
+	margin: 1.5em 0em 0em 0em;
+	padding: 1.5em 3em 1.5em 3em;
+}
+
+/* Secondary Content */
+
+#secondaryContent {
+	position: relative;
+	float: left;
+	width: 14em;
+	padding: 3em 2em 1.5em 2em;
+	background: #fff url('images/a1.gif') top right repeat-y;
+}
+
+#secondaryContent .xbg {
+	position: absolute;
+	right: 0em;
+	bottom: -64px;
+	background: #fff url('images/a3.gif') top right no-repeat;
+	height: 64px;
+	width: 128px;
+}
+
+/* Tertiary Content */
+
+#tertiaryContent {
+	position: relative;
+	float: right;
+	width: 15em;
+	padding: 3em 2em 1.5em 2em;
+	background: #fff url('images/a2.gif') top left repeat-y;
+}
+
+#tertiaryContent .xbg {
+	position: absolute;
+	left: 0em;
+	bottom: -64px;
+	background: #fff url('images/a4.gif') top left no-repeat;
+	height: 64px;
+	width: 128px;
+}
+
+/* Footer */
+
+#footer {
+	position: relative;
+	z-index: 1;
+	border-top: dashed 1px #dfdfdf;
+	padding: 1em 0em 2em 0em;
+	margin: 1em 2em 0em 2em;
+	text-align: center;
+}
+
+.clear {
+	clear: both;
+}
