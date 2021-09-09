@@ -299,7 +299,8 @@ class GameBase():
                 female_tournaments[id_] = rounds
         fin.close()
         for player_id in female_players:
-            self.players[player_id]['female'] = True
+            if player_id in self.players.keys():
+                self.players[player_id]['female'] = True
         for game in self.games.values():
             tournament_id = game['tournament']
             if tournament_id in female_tournaments.keys():
