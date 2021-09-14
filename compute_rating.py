@@ -4,7 +4,7 @@ import sys
 from datetime import date
 from game_base import GameBase
 from rating_output import RatingOutput
-from whr import Base
+from whr import Base, Evaluate
 
 input_xml = os.path.join(sys.path[0], 'data',
                          'renjunet_v10_%s.rif' % sys.argv[1])
