@@ -22,12 +22,16 @@ class RatingOutput:
         self.gcount_cache = None
         self.save_path = sys.path[0]
         self.rating_path = 'index.html'
+        self.rating_gy1_path = 'rating_gy1.html'
         self.rating_all_path = 'rating_all.html'
         self.rating_date_path = 'rating_%04d%02d%02d.html'
+        self.rating_gy1_date_path = 'rating_gy1_%04d%02d%02d.html'
         self.rating_all_date_path = 'rating_all_%04d%02d%02d.html'
         self.rating_country_path = 'rating_c%s.html'
+        self.rating_gy1_country_path = 'rating_gy1_c%s.html'
         self.rating_all_country_path = 'rating_all_c%s.html'
         self.rating_country_date_path = 'rating_c%s_%04d%02d%02d.html'
+        self.rating_gy1_country_date_path = 'rating_gy1_c%s_%04d%02d%02d.html'
         self.rating_all_country_date_path = 'rating_all_c%s_%04d%02d%02d.html'
         self.flag_path = 'flag/%s.svg'
         self.game_path = 'http://renju.net/media/games.php?gameid=%s'
@@ -53,7 +57,7 @@ class RatingOutput:
             cur_country_id = self.base.players[player]['country']
             self.country_set.add(cur_country_id)
 
-    def gen_ratings(self, active=True, day=None, country_id=None):
+    def gen_ratings(self, active_level=1, day=None, country_id=None):
         if day == None:
             ratings = self.base.get_ratings_latest()
             gy1s = self.gy1_cache.get(None, None)
@@ -110,12 +114,17 @@ class RatingOutput:
             gy5 = gy5s[player]
             gcount = gcounts[player]
             is_established = (gcount >= 10)
-            is_active = (gy5 > 0)
+            if active_level == 1:
+                is_active = (gy5 > 0)
+            elif active_level == 2:
+                is_active = (gy1 >= 10)
+            elif active_level == 0:
+                is_active = True
             if day is None:
                 women_start = True
             else:
                 women_start = (date(1970, 1, 1) + timedelta(day)).year >= 1997
-            if (is_established and is_active) or (not active):
+            if (is_established and is_active) or (not active_level > 0):
                 cur_rank += 1
                 if women_start and female:
                     cur_rank_women += 1
@@ -124,7 +133,7 @@ class RatingOutput:
                     if women_start and female:
                         gy1_rank_women += 1
                 rank = '%d' % cur_rank
-                if country_id is None and active:
+                if country_id is None and active_level == 1:
                     if day == None:
                         self.rank[player] = rank
                     if cur_rank == 1:
@@ -151,13 +160,13 @@ class RatingOutput:
                         self.topN_women[cur_date].append(player)
             else:
                 rank = ''
-            if ((not active) or (is_active and is_established)):
+            if ((not active_level > 0) or (is_active and is_established)):
                 outputs.append(
                     (player, rank, country, surname, name, native_name,
                      rating + self.bias, gy1, gy2, gy5, female))
 
         if day == None:
-            if active:
+            if active_level == 1:
                 if country_id is None:
                     title = 'Whole History Rating (WHR) of Active Renju Players'
                     dst = self.rating_path
@@ -165,7 +174,15 @@ class RatingOutput:
                     title = 'Whole History Rating (WHR) of Active Renju Players in %s' % (
                         self.base.countries[country_id]['name'])
                     dst = self.rating_country_path % country_id
-            else:
+            elif active_level == 2:
+                if country_id is None:
+                    title = 'Whole History Rating (WHR) of Active Renju Players (Gy1≥10)'
+                    dst = self.rating_gy1_path
+                else:
+                    title = 'Whole History Rating (WHR) of Active Renju Players in %s (Gy1≥10)' % (
+                        self.base.countries[country_id]['name'])
+                    dst = self.rating_gy1_country_path % country_id
+            elif active_level == 0:
                 if country_id is None:
                     title = 'Whole History Rating (WHR) of All Renju Players'
                     dst = self.rating_all_path
@@ -175,7 +192,7 @@ class RatingOutput:
                     dst = self.rating_all_country_path % country_id
         elif day != None:
             date_ = date(1970, 1, 1) + timedelta(day)
-            if active:
+            if active_level == 1:
                 if country_id is None:
                     title = 'Whole History Rating (WHR) of Active Renju Players (%04d-%02d-%02d)' % (
                         date_.year, date_.month, date_.day)
@@ -187,7 +204,19 @@ class RatingOutput:
                         date_.month, date_.day)
                     dst = self.rating_country_date_path % (
                         country_id, date_.year, date_.month, date_.day)
-            else:
+            elif active_level == 2:
+                if country_id is None:
+                    title = 'Whole History Rating (WHR) of Active Renju Players (%04d-%02d-%02d) (Gy1≥10)' % (
+                        date_.year, date_.month, date_.day)
+                    dst = self.rating_gy1_date_path % (date_.year, date_.month,
+                                                       date_.day)
+                else:
+                    title = 'Whole History Rating (WHR) of Active Renju Players in %s (%04d-%02d-%02d) (Gy1≥10)' % (
+                        self.base.countries[country_id]['name'], date_.year,
+                        date_.month, date_.day)
+                    dst = self.rating_gy1_country_date_path % (
+                        country_id, date_.year, date_.month, date_.day)
+            elif active_level == 0:
                 if country_id is None:
                     title = 'Whole History Rating (WHR) of All Renju Players (%04d-%02d-%02d)' % (
                         date_.year, date_.month, date_.day)
@@ -213,7 +242,7 @@ class RatingOutput:
                     "this.options[this.selectedIndex].value && (window.location = this.options[this.selectedIndex].value);"
             ):
                 if day == None:
-                    if active:
+                    if active_level == 1:
                         if country_id is None:
                             line('option',
                                  'Current',
@@ -224,7 +253,19 @@ class RatingOutput:
                                  'Current',
                                  value=self.rating_country_path % country_id,
                                  selected='selected')
-                    else:
+                    elif active_level == 2:
+                        if country_id is None:
+                            line('option',
+                                 'Current',
+                                 value=self.rating_gy1_path,
+                                 selected='selected')
+                        else:
+                            line('option',
+                                 'Current',
+                                 value=self.rating_gy1_country_path %
+                                 country_id,
+                                 selected='selected')
+                    elif active_level == 0:
                         if country_id is None:
                             line('option',
                                  'Current',
@@ -237,14 +278,24 @@ class RatingOutput:
                                  country_id,
                                  selected='selected')
                 else:
-                    if active:
+                    if active_level == 1:
                         if country_id is None:
                             line('option', 'Current', value=self.rating_path)
                         else:
                             line('option',
                                  'Current',
                                  value=self.rating_country_path % country_id)
-                    else:
+                    elif active_level == 2:
+                        if country_id is None:
+                            line('option',
+                                 'Current',
+                                 value=self.rating_gy1_path)
+                        else:
+                            line('option',
+                                 'Current',
+                                 value=self.rating_gy1_country_path %
+                                 country_id)
+                    elif active_level == 0:
                         if country_id is None:
                             line('option',
                                  'Current',
@@ -257,7 +308,7 @@ class RatingOutput:
                     cur_year = (date(1970, 1, 1) + timedelta(day)).year
                 for year in range(self.base.date.year - 1, 1988, -1):
                     if day != None and cur_year == year:
-                        if active:
+                        if active_level == 1:
                             if country_id is None:
                                 line('option',
                                      '%04d' % year,
@@ -270,7 +321,20 @@ class RatingOutput:
                                      value=self.rating_country_date_path %
                                      (country_id, year, 12, 31),
                                      selected='selected')
-                        else:
+                        elif active_level == 2:
+                            if country_id is None:
+                                line('option',
+                                     '%04d' % year,
+                                     value=self.rating_gy1_date_path %
+                                     (year, 12, 31),
+                                     selected='selected')
+                            else:
+                                line('option',
+                                     '%04d' % year,
+                                     value=self.rating_gy1_country_date_path %
+                                     (country_id, year, 12, 31),
+                                     selected='selected')
+                        elif active_level == 0:
                             if country_id is None:
                                 line('option',
                                      '%04d' % year,
@@ -284,7 +348,7 @@ class RatingOutput:
                                      (country_id, year, 12, 31),
                                      selected='selected')
                     else:
-                        if active:
+                        if active_level == 1:
                             if country_id is None:
                                 line('option',
                                      '%04d' % year,
@@ -295,7 +359,18 @@ class RatingOutput:
                                      '%04d' % year,
                                      value=self.rating_country_date_path %
                                      (country_id, year, 12, 31))
-                        else:
+                        elif active_level == 2:
+                            if country_id is None:
+                                line('option',
+                                     '%04d' % year,
+                                     value=self.rating_gy1_date_path %
+                                     (year, 12, 31))
+                            else:
+                                line('option',
+                                     '%04d' % year,
+                                     value=self.rating_gy1_country_date_path %
+                                     (country_id, year, 12, 31))
+                        elif active_level == 0:
                             if country_id is None:
                                 line('option',
                                      '%04d' % year,
@@ -313,7 +388,7 @@ class RatingOutput:
                     "this.options[this.selectedIndex].value && (window.location = this.options[this.selectedIndex].value);"
             ):
                 if country_id == None:
-                    if active:
+                    if active_level == 1:
                         if day is None:
                             line('option',
                                  'All',
@@ -326,7 +401,20 @@ class RatingOutput:
                                  value=self.rating_date_path %
                                  (cur_year, 12, 31),
                                  selected='selected')
-                    else:
+                    elif active_level == 2:
+                        if day is None:
+                            line('option',
+                                 'All',
+                                 value=self.rating_gy1_path,
+                                 selected='selected')
+                        else:
+                            cur_year = (date(1970, 1, 1) + timedelta(day)).year
+                            line('option',
+                                 'All',
+                                 value=self.rating_gy1_date_path %
+                                 (cur_year, 12, 31),
+                                 selected='selected')
+                    elif active_level == 0:
                         if day is None:
                             line('option',
                                  'All',
@@ -340,7 +428,7 @@ class RatingOutput:
                                  (cur_year, 12, 31),
                                  selected='selected')
                 else:
-                    if active:
+                    if active_level == 1:
                         if day is None:
                             line('option', 'All', value=self.rating_path)
                         else:
@@ -349,7 +437,16 @@ class RatingOutput:
                                  'All',
                                  value=self.rating_date_path %
                                  (cur_year, 12, 31))
-                    else:
+                    elif active_level == 2:
+                        if day is None:
+                            line('option', 'All', value=self.rating_gy1_path)
+                        else:
+                            cur_year = (date(1970, 1, 1) + timedelta(day)).year
+                            line('option',
+                                 'All',
+                                 value=self.rating_gy1_date_path %
+                                 (cur_year, 12, 31))
+                    elif active_level == 0:
                         if day is None:
                             line('option', 'All', value=self.rating_all_path)
                         else:
@@ -363,7 +460,7 @@ class RatingOutput:
                     key=lambda x: self.base.countries[x]['name'])
                 for list_country_id in sorted_country_list:
                     if country_id != None and country_id == list_country_id:
-                        if active:
+                        if active_level == 1:
                             if day is None:
                                 line('option',
                                      self.base.countries[list_country_id]
@@ -380,7 +477,24 @@ class RatingOutput:
                                      value=self.rating_country_date_path %
                                      (list_country_id, cur_year, 12, 31),
                                      selected='selected')
-                        else:
+                        elif active_level == 2:
+                            if day is None:
+                                line('option',
+                                     self.base.countries[list_country_id]
+                                     ['name'],
+                                     value=self.rating_gy1_country_path %
+                                     list_country_id,
+                                     selected='selected')
+                            else:
+                                cur_year = (date(1970, 1, 1) +
+                                            timedelta(day)).year
+                                line('option',
+                                     self.base.countries[list_country_id]
+                                     ['name'],
+                                     value=self.rating_gy1_country_date_path %
+                                     (list_country_id, cur_year, 12, 31),
+                                     selected='selected')
+                        elif active_level == 0:
                             if day is None:
                                 line('option',
                                      self.base.countries[list_country_id]
@@ -398,7 +512,7 @@ class RatingOutput:
                                      (list_country_id, cur_year, 12, 31),
                                      selected='selected')
                     else:
-                        if active:
+                        if active_level == 1:
                             if day is None:
                                 line('option',
                                      self.base.countries[list_country_id]
@@ -413,7 +527,22 @@ class RatingOutput:
                                      ['name'],
                                      value=self.rating_country_date_path %
                                      (list_country_id, cur_year, 12, 31))
-                        else:
+                        elif active_level == 2:
+                            if day is None:
+                                line('option',
+                                     self.base.countries[list_country_id]
+                                     ['name'],
+                                     value=self.rating_gy1_country_path %
+                                     list_country_id)
+                            else:
+                                cur_year = (date(1970, 1, 1) +
+                                            timedelta(day)).year
+                                line('option',
+                                     self.base.countries[list_country_id]
+                                     ['name'],
+                                     value=self.rating_gy1_country_date_path %
+                                     (list_country_id, cur_year, 12, 31))
+                        elif active_level == 0:
                             if day is None:
                                 line('option',
                                      self.base.countries[list_country_id]
@@ -436,33 +565,68 @@ class RatingOutput:
             ):
                 if country_id is None:
                     if day is None:
-                        if active:
+                        if active_level == 1:
                             line('option',
                                  'Active',
                                  value=self.rating_path,
                                  selected='selected')
+                            line('option',
+                                 'Gy1≥10',
+                                 value=self.rating_gy1_path)
                             line('option', 'All', value=self.rating_all_path)
-                        else:
+                        elif active_level == 2:
                             line('option', 'Active', value=self.rating_path)
+                            line('option',
+                                 'Gy1≥10',
+                                 value=self.rating_gy1_path,
+                                 selected='selected')
+                            line('option', 'All', value=self.rating_all_path)
+                        elif active_level == 0:
+                            line('option', 'Active', value=self.rating_path)
+                            line('option',
+                                 'Gy1≥10',
+                                 value=self.rating_gy1_path)
                             line('option',
                                  'All',
                                  value=self.rating_all_path,
                                  selected='selected')
                     else:
-                        if active:
+                        if active_level == 1:
                             line('option',
                                  'Active',
                                  value=self.rating_date_path %
                                  (cur_year, 12, 31),
                                  selected='selected')
                             line('option',
+                                 'Gy1≥10',
+                                 value=self.rating_gy1_date_path %
+                                 (cur_year, 12, 31))
+                            line('option',
                                  'All',
                                  value=self.rating_all_date_path %
                                  (cur_year, 12, 31))
-                        else:
+                        elif active_level == 2:
                             line('option',
                                  'Active',
                                  value=self.rating_date_path %
+                                 (cur_year, 12, 31))
+                            line('option',
+                                 'Gy1≥10',
+                                 value=self.rating_gy1_date_path %
+                                 (cur_year, 12, 31),
+                                 selected='selected')
+                            line('option',
+                                 'All',
+                                 value=self.rating_all_date_path %
+                                 (cur_year, 12, 31))
+                        elif active_level == 0:
+                            line('option',
+                                 'Active',
+                                 value=self.rating_date_path %
+                                 (cur_year, 12, 31))
+                            line('option',
+                                 'Gy1≥10',
+                                 value=self.rating_gy1_date_path %
                                  (cur_year, 12, 31))
                             line('option',
                                  'All',
@@ -471,39 +635,82 @@ class RatingOutput:
                                  selected='selected')
                 else:
                     if day is None:
-                        if active:
+                        if active_level == 1:
                             line('option',
                                  'Active',
                                  value=self.rating_country_path % country_id,
                                  selected='selected')
                             line('option',
+                                 'Gy1≥10',
+                                 value=self.rating_gy1_country_path %
+                                 country_id)
+                            line('option',
                                  'All',
                                  value=self.rating_all_country_path %
                                  country_id)
-                        else:
+                        elif active_level == 2:
                             line('option',
                                  'Active',
                                  value=self.rating_country_path % country_id)
+                            line('option',
+                                 'Gy1≥10',
+                                 value=self.rating_gy1_country_path %
+                                 country_id,
+                                 selected='selected')
+                            line('option',
+                                 'All',
+                                 value=self.rating_all_country_path %
+                                 country_id)
+                        elif active_level == 0:
+                            line('option',
+                                 'Active',
+                                 value=self.rating_country_path % country_id)
+                            line('option',
+                                 'Gy1≥10',
+                                 value=self.rating_gy1_country_path %
+                                 country_id)
                             line('option',
                                  'All',
                                  value=self.rating_all_country_path %
                                  country_id,
                                  selected='selected')
                     else:
-                        if active:
+                        if active_level == 1:
                             line('option',
                                  'Active',
                                  value=self.rating_country_date_path %
                                  (country_id, cur_year, 12, 31),
                                  selected='selected')
                             line('option',
+                                 'Gy1≥10',
+                                 value=self.rating_gy1_country_date_path %
+                                 (country_id, cur_year, 12, 31))
+                            line('option',
                                  'All',
                                  value=self.rating_all_country_date_path %
                                  (country_id, cur_year, 12, 31))
-                        else:
+                        elif active_level == 2:
                             line('option',
                                  'Active',
                                  value=self.rating_country_date_path %
+                                 (country_id, cur_year, 12, 31))
+                            line('option',
+                                 'Gy1≥10',
+                                 value=self.rating_gy1_country_date_path %
+                                 (country_id, cur_year, 12, 31),
+                                 selected='selected')
+                            line('option',
+                                 'All',
+                                 value=self.rating_all_country_date_path %
+                                 (country_id, cur_year, 12, 31))
+                        elif active_level == 0:
+                            line('option',
+                                 'Active',
+                                 value=self.rating_country_date_path %
+                                 (country_id, cur_year, 12, 31))
+                            line('option',
+                                 'Gy1≥10',
+                                 value=self.rating_gy1_country_date_path %
                                  (country_id, cur_year, 12, 31))
                             line('option',
                                  'All',

@@ -52,14 +52,22 @@ for year in range(base.date.year - 1, 1988, -1):
     output.gen_ratings(day=day)
     for country_id in output.country_set:
         output.gen_ratings(day=day, country_id=country_id)
-output.gen_ratings(active=False)
+output.gen_ratings(active_level=2)
 for country_id in output.country_set:
-    output.gen_ratings(country_id=country_id, active=False)
+    output.gen_ratings(country_id=country_id, active_level=2)
 for year in range(base.date.year - 1, 1988, -1):
     day = (date(year, 12, 31) - date(1970, 1, 1)).days
-    output.gen_ratings(day=day, active=False)
+    output.gen_ratings(day=day, active_level=2)
     for country_id in output.country_set:
-        output.gen_ratings(day=day, country_id=country_id, active=False)
+        output.gen_ratings(day=day, country_id=country_id, active_level=2)
+output.gen_ratings(active_level=0)
+for country_id in output.country_set:
+    output.gen_ratings(country_id=country_id, active_level=0)
+for year in range(base.date.year - 1, 1988, -1):
+    day = (date(year, 12, 31) - date(1970, 1, 1)).days
+    output.gen_ratings(day=day, active_level=0)
+    for country_id in output.country_set:
+        output.gen_ratings(day=day, country_id=country_id, active_level=0)
 output.gen_player()
 output.gen_players()
 output.gen_tournaments()
