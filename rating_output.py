@@ -232,6 +232,9 @@ class RatingOutput:
         doc, tag, text, line = Doc().ttl()
         line('h1', title)
         doc.asis(
+            f'<p><b>Last update:</b> { self.base.date.strftime("%Y-%m-%d") }</p>'
+        )
+        doc.asis(
             '<p><b>Note:</b> This rating is calculated based on the <a href="https://www.remi-coulom.fr/WHR/">WHR algorithm</a> by Rémi Coulom, a similar approach as the <a href="https://www.goratings.org/en/">Go Ratings</a>. The core algorithm is based on the <a href="https://github.com/wind23/whr_renju">open-source code</a> on Github. The Elo version of the renju rating can be found <a href="http://renjuoffline.com/renju-rating/">here</a>.  Just for observing the variation of renju player ratings in a different view!</p>'
         )
         with tag('p'):
