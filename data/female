@@ -84,6 +84,7 @@ tournament	2375	E,F,G,H
 tournament	2384	H
 tournament	2395	*
 tournament	2414	G
+tournament	2430	*
 tournament	T0002	*
 tournament	T0004	*
 tournament	T0006	*
@@ -281,3 +282,6 @@ player	4129
 player	4130
 player	4119
 player	4126
+player	4177
+player	4205
+player	4215
