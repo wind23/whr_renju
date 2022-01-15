@@ -217,7 +217,7 @@ class GameBase():
             }
 
     def read_additional_input(self, input_file):
-        fin = open(input_file, 'r')
+        fin = open(input_file, 'r', encoding='utf-8')
         for line in fin:
             line = line.strip()
             if not line:
