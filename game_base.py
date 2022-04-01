@@ -6,6 +6,7 @@ from xml.etree import ElementTree
 
 
 class GameBase():
+
     def __init__(self, cur_date=None):
         if not cur_date:
             self.date = date.today()
@@ -89,13 +90,15 @@ class GameBase():
                 name, surname = player_name_map[id_]
             country = player.attrib['country']
             city = player.attrib['city']
+            female = (int(player.attrib['gender']) == 2)
+            native_name = player.attrib.get('native_name', '')
             self.players[id_] = {
                 'name': name,
                 'surname': surname,
                 'country': country,
                 'city': city,
-                'female': False,
-                'native_name': ''
+                'female': female,
+                'native_name': native_name
             }
 
         unrated_tournament_list = set()
@@ -234,13 +237,19 @@ class GameBase():
                 self.rules[id_] = {'name': name}
             elif type_ == 'player':
                 id_, name, surname, country, city = content.split('\t')
+                if id_ in self.players.keys():
+                    female = self.players[id_]['female']
+                    native_name = self.players[id_]['native_name']
+                else:
+                    female = False
+                    native_name = ''
                 self.players[id_] = {
                     'name': name,
                     'surname': surname,
                     'country': country,
                     'city': city,
-                    'female': False,
-                    'native_name': ''
+                    'female': female,
+                    'native_name': native_name
                 }
             elif type_ == 'tournament':
                 id_, name, country, city, start, end, rule = content.split(
