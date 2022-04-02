@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 from datetime import date, timedelta, datetime, timezone
 from yattag import Doc, indent
 from xml.etree import ElementTree
@@ -7,6 +8,7 @@ from xml.dom import minidom
 
 
 class RatingOutput:
+
     def __init__(self, base, bias=1600.):
         self.base = base
         self.bias = bias
@@ -37,12 +39,17 @@ class RatingOutput:
         self.game_path = 'http://renju.net/media/games.php?gameid=%s'
         self.player_path = 'player_%s.html'
         self.players_path = 'players.html'
+        self.players_json_path = 'players.json'
         self.tournament_path = 'tournament_%s.html'
         self.tournaments_path = 'tournaments.html'
         self.top_rating_path = 'top.html'
         self.top_rating_women_path = 'top_women.html'
+        self.ljrating_path = 'ljrating.html'
         self.sitemap_path = 'sitemap.xml'
         self.gomoku_path = 'https://gomokurating.wind23.com/'
+        self.ljinfo_name = 'ljinfo.csv'
+        self.ljcountry_name = 'ljcountry.csv'
+        self.ljcity_name = 'ljcity.csv'
         self.pages = []
 
         ratings = self.base.get_ratings_latest()
@@ -56,6 +63,13 @@ class RatingOutput:
             is_established = (gcount >= 10)
             cur_country_id = self.base.players[player]['country']
             self.country_set.add(cur_country_id)
+
+        self.n_games = len(self.base.games)
+        self.n_players = len(
+            {game['black']
+             for game in self.base.games.values()}
+            | {game['white']
+               for game in self.base.games.values()})
 
     def gen_ratings(self, active_level=1, day=None, country_id=None):
         if day == None:
@@ -232,7 +246,7 @@ class RatingOutput:
         doc, tag, text, line = Doc().ttl()
         line('h1', title)
         doc.asis(
-            f'<p><b>Last update:</b> { self.base.date.strftime("%Y-%m-%d") }</p>'
+            f'<p><b>Last update:</b> { self.base.date.strftime("%Y-%m-%d") }, <b>Players:</b> { self.n_players }, <b>Games:</b> { self.n_games }</p>'
         )
         doc.asis(
             '<p><b>Note:</b> This rating is calculated based on the <a href="https://www.remi-coulom.fr/WHR/">WHR algorithm</a> by Rémi Coulom, a similar approach as the <a href="https://www.goratings.org/en/">Go Ratings</a>. The core algorithm is based on the <a href="https://github.com/wind23/whr_renju">open-source code</a> on Github. The Elo version of the renju rating can be found <a href="http://renjuoffline.com/renju-rating/">here</a>.  Just for observing the variation of renju player ratings in a different view!</p>'
@@ -758,6 +772,245 @@ class RatingOutput:
             weight -= 0.3
         self.gen_html(dst, title, doc.getvalue(), weight)
 
+    def gen_ljratings(self):
+        ratings = self.base.get_ratings_latest()
+        gy5s = self.gy5_cache.get(None, None)
+        if gy5s == None:
+            gy5s = self.base.get_game_count_within_n_years_latest(5)
+            self.gy5_cache[None] = gy5s
+
+        if self.gcount_cache == None:
+            gcounts = self.base.get_game_count_so_far_latest()
+            self.gcount_cache = gcounts
+        else:
+            gcounts = self.gcount_cache
+
+        ratings = sorted(ratings.items(), key=lambda x: x[1], reverse=True)
+        outputs = []
+        ljinfo_outputs = []
+        cur_rank = 0
+
+        ljinfo = {}
+        ljinfo_name = os.path.join(self.save_path, 'data', self.ljinfo_name)
+        if os.path.exists(ljinfo_name):
+            with open(ljinfo_name, 'r', encoding='utf-8') as fin:
+                for line in fin:
+                    if line:
+                        player, name, native_name, country, city, is_active, rating = line.strip(
+                        ).split('\t')
+                        ljinfo[player] = native_name
+
+        ljcountry_dict = {}
+        ljcountry_name = os.path.join(self.save_path, 'data',
+                                      self.ljcountry_name)
+        if os.path.exists(ljcountry_name):
+            with open(ljcountry_name, 'r', encoding='utf-8') as fin:
+                for line in fin:
+                    if line:
+                        country_id, country, ljcountry = line.strip(
+                            '\r\n').split('\t')
+                        ljcountry_dict[country_id] = ljcountry
+
+        ljcity_dict = {}
+        ljcity_name = os.path.join(self.save_path, 'data', self.ljcity_name)
+        if os.path.exists(ljcity_name):
+            with open(ljcity_name, 'r', encoding='utf-8') as fin:
+                for line in fin:
+                    if line:
+                        city_id, city, ljcity = line.strip('\r\n').split('\t')
+                        ljcity_dict[city_id] = ljcity
+
+        for player, rating in ratings:
+            cur_country_id = self.base.players[player]['country']
+            country_code = self.base.countries[cur_country_id]['abbr']
+            country = self.base.countries[cur_country_id]['name']
+            cur_city_id = self.base.players[player]['city']
+            city = self.base.cities[cur_city_id]['name']
+            name = self.base.players[player]['name']
+            surname = self.base.players[player]['surname']
+            native_name = self.base.players[player]['native_name']
+            gy5 = gy5s[player]
+            gcount = gcounts[player]
+            is_established = (gcount >= 10)
+            is_active = (gy5 > 0)
+            if is_established and is_active:
+                cur_rank += 1
+                rank = '%d' % cur_rank
+            else:
+                rank = ''
+            cur_ljinfo = ljinfo.get(player, None)
+            if cur_ljinfo is not None:
+                ljnative_name = cur_ljinfo
+                if ljnative_name != '*':
+                    native_name = ljnative_name
+            if cur_country_id in ljcountry_dict.keys():
+                country = ljcountry_dict[cur_country_id]
+            if cur_city_id in ljcity_dict.keys():
+                city = ljcity_dict[cur_city_id]
+            if is_active and is_established:
+                outputs.append(
+                    (player, rank, country_code, country, city, surname, name,
+                     native_name, rating + self.bias))
+            ljinfo_outputs.append(
+                (player, rank, country_code, country, city, surname, name,
+                 native_name, rating + self.bias, (is_active
+                                                   and is_established)))
+
+        with open(ljinfo_name, 'w', encoding='utf-8') as fout:
+            for player, rank, country_code, country, city, surname, name, native_name, rating, is_active in ljinfo_outputs:
+                if not native_name:
+                    native_name = '*'
+                if not country:
+                    country = '*'
+                if not city:
+                    city = '*'
+                if is_active:
+                    is_active = '+'
+                else:
+                    is_active = '-'
+                fout.write(
+                    f'{player}\t{surname} {name}\t{native_name}\t{country}\t{city}\t{is_active}\t{round(rating)}\n'
+                )
+
+        title = 'LJRenju Rating'
+        dst = self.ljrating_path
+
+        doc, tag, text, line = Doc().ttl()
+        doc.asis('<!DOCTYPE html>')
+        with tag('html', xmlns="http://www.w3.org/1999/xhtml"):
+            with tag('head'):
+                doc.stag('meta', charset='utf-8')
+                doc.stag('meta', ('http-equiv', "content-type"),
+                         ('content', "text/html; charset=utf-8"))
+                doc.stag(
+                    'meta',
+                    name="viewport",
+                    content=
+                    "width=device-width, initial-scale=1, maximum-scale=1")
+                doc.asis('''    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->''')
+                doc.stag(
+                    'meta',
+                    name="keywords",
+                    content="Renju, Renju rating, whole-history rating, WHR")
+                doc.stag('meta',
+                         name="description",
+                         content="Whole-history rating of Renju players")
+                doc.stag('meta', name="author", content="Tianyi Hao")
+                doc.stag('meta',
+                         name="copyright",
+                         content="%d Renju Rating" % self.base.date.year)
+                line('title', '%s - Renju Rating' % title)
+                with tag('script'):
+                    doc.asis('''
+        if (window.location.protocol != "file:") {
+            var _hmt = _hmt || [];
+            (function() {
+            var hm = document.createElement("script");
+            hm.src = "https://hm.baidu.com/hm.js?cb525b0b0c34b96320b743cdf90a90c3";
+            var s = document.getElementsByTagName("script")[0];
+            s.parentNode.insertBefore(hm, s);
+            })();
+        }
+    ''')
+                with tag('script'):
+                    doc.asis('''
+        if (window.location.protocol != "file:") {
+            (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+            })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+            ga('create', 'UA-119927498-1', 'auto');
+            ga('send', 'pageview');
+        }
+    ''')
+                doc.stag('link',
+                         href="css/ljrenju.css",
+                         rel="stylesheet",
+                         type="text/css")
+            with tag('body'):
+                with tag('div', align='center'):
+                    doc.asis(
+                        f'<p><b>最近更新：</b> { self.base.date.strftime("%Y-%m-%d") }</p>'
+                    )
+
+                    with tag('table', align='center', klass='tabRat2'):
+                        with tag('tr'):
+                            for entry in ('序号', '编号', '姓名', '国家(地区)', '城市',
+                                          '等级分'):
+                                line('th', entry)
+                        for player, rank, country_code, country, city, surname, name, native_name, rating in outputs:
+                            with tag('tr'):
+                                if rank == '1':
+                                    line('th',
+                                         rank,
+                                         align='center',
+                                         klass='mdlGod')
+                                elif rank in [str(i) for i in range(2, 4)]:
+                                    line('th', rank, align='center')
+                                elif rank in [str(i) for i in range(4, 11)]:
+                                    line('th',
+                                         rank,
+                                         align='center',
+                                         bgcolor='#CCFFCC')
+                                elif rank in [str(i) for i in range(11, 21)]:
+                                    line('td',
+                                         rank,
+                                         align='center',
+                                         bgcolor='#CCFFCC')
+                                else:
+                                    line('td', rank, align='center')
+                                if country_code == 'CHN':
+                                    klass = 'bgChn'
+                                elif country_code == 'TPE':
+                                    klass = 'bgTpe'
+                                elif country_code == 'HKG':
+                                    klass = 'bgHok'
+                                elif country_code == 'MAC':
+                                    klass = 'bgMac'
+                                else:
+                                    klass = None
+                                if not klass:
+                                    line('td', player, align='center')
+                                    if native_name:
+                                        line(
+                                            'td', '%s %s (%s)' %
+                                            (surname, name, native_name))
+                                    else:
+                                        line('td', '%s %s' % (surname, name))
+                                    line('td', country)
+                                    line('td', city)
+                                    line('td',
+                                         '%d' % round(rating),
+                                         align='center')
+                                else:
+                                    line('td',
+                                         player,
+                                         align='center',
+                                         klass=klass)
+                                    if native_name:
+                                        line('td',
+                                             '%s %s (%s)' %
+                                             (surname, name, native_name),
+                                             klass=klass)
+                                    else:
+                                        line('td',
+                                             '%s %s' % (surname, name),
+                                             klass=klass)
+                                    line('td', country, klass=klass)
+                                    line('td', city, klass=klass)
+                                    line('td',
+                                         '%d' % round(rating),
+                                         align='center',
+                                         klass=klass)
+
+        fout = open(os.path.join(self.save_path, 'html', dst),
+                    'w',
+                    encoding='utf-8')
+        fout.write(indent(doc.getvalue()))
+        fout.close()
+
     def gen_players(self):
         players = sorted(self.base.players.items(),
                          key=lambda x: self.base.round_to_key(x[0]))
@@ -819,6 +1072,45 @@ class RatingOutput:
 
         weight = 0.9
         self.gen_html(dst, title, doc.getvalue(), weight)
+
+    def gen_players_json(self):
+        ratings = self.base.get_ratings_latest()
+        gy5s = self.gy5_cache.get(None, None)
+        if gy5s == None:
+            gy5s = self.base.get_game_count_within_n_years_latest(5)
+            self.gy5_cache[None] = gy5s
+
+        if self.gcount_cache == None:
+            gcounts = self.base.get_game_count_so_far_latest()
+            self.gcount_cache = gcounts
+        else:
+            gcounts = self.gcount_cache
+
+        ratings = sorted(ratings.items(), key=lambda x: x[1], reverse=True)
+        outputs = []
+        cur_rank = 0
+
+        for player, rating in ratings:
+            gy5 = gy5s[player]
+            gcount = gcounts[player]
+            is_established = (gcount >= 10)
+            is_active = (gy5 > 0)
+            if is_established and is_active:
+                cur_rank += 1
+                rank = cur_rank
+            else:
+                rank = 0
+
+            outputs.append(
+                [int(player), rank, rating + self.bias,
+                 int(is_established)])
+        outputs.sort(key=lambda x: int(x[0]))
+
+        dst = self.players_json_path
+        with open(os.path.join(self.save_path, 'html', dst),
+                  'w',
+                  encoding='utf-8') as fout:
+            json.dump(outputs, fout)
 
     def gen_player(self):
         ratings = self.base.ratings

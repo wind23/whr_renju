@@ -73,6 +73,7 @@ for year in range(cur_year - 1, 1988, -1):
         output.gen_ratings(day=day, country_id=country_id, active_level=0)
 output.gen_player()
 output.gen_players()
+output.gen_players_json()
 output.gen_tournaments()
 output.gen_tournament()
 output.gen_top_ratings()
