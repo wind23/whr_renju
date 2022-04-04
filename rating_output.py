@@ -36,7 +36,7 @@ class RatingOutput:
         self.rating_gy1_country_date_path = 'rating_gy1_c%s_%04d%02d%02d.html'
         self.rating_all_country_date_path = 'rating_all_c%s_%04d%02d%02d.html'
         self.flag_path = 'flag/%s.svg'
-        self.game_path = 'http://renju.net/media/games.php?gameid=%s'
+        self.game_path = 'https://www.renju.net/game/%s/'
         self.player_path = 'player_%s.html'
         self.players_path = 'players.html'
         self.players_json_path = 'players.json'
