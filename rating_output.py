@@ -71,6 +71,10 @@ class RatingOutput:
             | {game['white']
                for game in self.base.games.values()})
 
+    def flag(self, doc, country, klass='flag'):
+        return
+        doc.stag('img', src=self.flag_path % country, klass=klass, alt=country)
+
     def gen_ratings(self, active_level=1, day=None, country_id=None):
         if day == None:
             ratings = self.base.get_ratings_latest()
@@ -116,6 +120,7 @@ class RatingOutput:
         for player, rating in ratings:
             cur_country_id = self.base.players[player]['country']
             country = self.base.countries[cur_country_id]['abbr']
+            country_name = self.base.countries[cur_country_id]['name']
             if country_id is not None:
                 if cur_country_id != country_id:
                     continue
@@ -176,8 +181,8 @@ class RatingOutput:
                 rank = ''
             if ((not active_level > 0) or (is_active and is_established)):
                 outputs.append(
-                    (player, rank, country, surname, name, native_name,
-                     rating + self.bias, gy1, gy2, gy5, female))
+                    (player, rank, country, country_name, surname, name,
+                     native_name, rating + self.bias, gy1, gy2, gy5, female))
 
         if day == None:
             if active_level == 1:
@@ -738,16 +743,13 @@ class RatingOutput:
             with tag('tbody'):
                 with tag('tr'):
                     for entry in ('Rank', 'Player', 'Rating', 'Gy1', 'Gy2',
-                                  'Gy5'):
+                                  'Gy5', 'Country/Region'):
                         line('th', entry)
-                for player, rank, country, surname, name, native_name, rating, gy1, gy2, gy5, female in outputs:
+                for player, rank, country, country_name, surname, name, native_name, rating, gy1, gy2, gy5, female in outputs:
                     with tag('tr'):
                         line('td', rank, klass='num')
                         with tag('td'):
-                            doc.stag('img',
-                                     src=self.flag_path % country,
-                                     klass='flag',
-                                     alt=country)
+                            self.flag(doc, country)
                             text(' ')
                             if not female:
                                 line('a',
@@ -764,6 +766,7 @@ class RatingOutput:
                         line('td', gy1, klass='num')
                         line('td', gy2, klass='num')
                         line('td', gy5, klass='num')
+                        line('td', country_name)
 
         weight = 1.0
         if day is not None:
@@ -1025,6 +1028,7 @@ class RatingOutput:
             native_name = player['native_name']
             female = player['female']
             country = self.base.countries[player['country']]['abbr']
+            country_name = self.base.countries[player['country']]['name']
             city = self.base.cities[player['city']]['name']
             rating = ratings[player_id][-1][1] + self.bias
             history = histories[player_id]
@@ -1032,8 +1036,8 @@ class RatingOutput:
             for tournament_id, games in history:
                 gcount += len(games)
             outputs.append([
-                player_id, surname, name, native_name, country, rating, gcount,
-                city, female
+                player_id, surname, name, native_name, country, country_name,
+                rating, gcount, city, female
             ])
         doc, tag, text, line = Doc().ttl()
         with tag('table'):
@@ -1044,14 +1048,11 @@ class RatingOutput:
                     line('th', 'Rating')
                     line('th', 'Games')
                     line('th', 'Place')
-                for player_id, surname, name, native_name, country, rating, gcount, city, female in outputs:
+                for player_id, surname, name, native_name, country, country_name, rating, gcount, city, female in outputs:
                     with tag('tr'):
                         line('td', player_id, klass='num')
                         with tag('td'):
-                            doc.stag('img',
-                                     src=self.flag_path % country,
-                                     klass='flag',
-                                     alt=country)
+                            self.flag(doc, country)
                             text(' ')
                             if not female:
                                 line('a',
@@ -1066,7 +1067,7 @@ class RatingOutput:
                                      title=native_name)
                         line('td', '%d' % round(rating), klass='num')
                         line('td', '%d' % gcount, klass='num')
-                        line('td', city)
+                        line('td', city + ', ' + country_name)
         title = 'List of Players'
         dst = self.players_path
 
@@ -1214,10 +1215,7 @@ class RatingOutput:
             doc.asis(
                 '<link href="css/nv.d3.css" rel="stylesheet" type="text/css">')
             with tag('h1'):
-                doc.stag('img',
-                         src=self.flag_path % country_abbr,
-                         klass='flag_large',
-                         alt=country_abbr)
+                self.flag(doc, country_abbr, klass='flag_large')
                 if not native_name:
                     doc.text(' %s %s' % (surname, name))
                 else:
@@ -1364,11 +1362,7 @@ class RatingOutput:
                                                  href=self.game_path %
                                                  output_game_id)
                                 with tag('td'):
-                                    doc.stag('img',
-                                             src=self.flag_path %
-                                             opponent_country,
-                                             klass='flag',
-                                             alt=opponent_country)
+                                    self.flag(doc, opponent_country)
                                     text(' ')
                                     if not opponent_female:
                                         line('a',
@@ -1426,10 +1420,7 @@ class RatingOutput:
                 for tournament_id, name, country, city, ngames, start, end in outputs:
                     with tag('tr'):
                         with tag('td'):
-                            doc.stag('img',
-                                     src=self.flag_path % country,
-                                     klass='flag',
-                                     alt=country)
+                            self.flag(doc, country)
                             text(' %s' % city)
                         with tag('td'):
                             line('a',
@@ -1528,11 +1519,7 @@ class RatingOutput:
                         for black, black_surname, black_name, black_native_name, black_country, black_rating, black_female, white, white_surname, white_name, white_native_name, white_country, white_rating, white_female, result, output_game_id in game_outputs:
                             with tag('tr'):
                                 with tag('td'):
-                                    doc.stag('img',
-                                             src=self.flag_path %
-                                             black_country,
-                                             klass='flag',
-                                             alt=black_country)
+                                    self.flag(doc, black_country)
                                     text(' ')
                                     if not black_female:
                                         line('a',
@@ -1576,11 +1563,7 @@ class RatingOutput:
                                              klass='female',
                                              title=white_native_name)
                                     text(' ')
-                                    doc.stag('img',
-                                             src=self.flag_path %
-                                             white_country,
-                                             klass='flag',
-                                             alt=white_country)
+                                    self.flag(doc, white_country)
             title = name
             dst = self.tournament_path % tournament_id
 
@@ -1725,10 +1708,7 @@ class RatingOutput:
                         line('td', date_, klass='num')
                         for player_id, country, surname, name, native_name, female in date_outputs:
                             with tag('td'):
-                                doc.stag('img',
-                                         src=self.flag_path % country,
-                                         klass='flag',
-                                         alt=country)
+                                self.flag(doc, country)
                                 text(' ')
                                 if not female:
                                     line('a',
