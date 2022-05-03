@@ -1,7 +1,7 @@
 import math
 import os
 import sys
-from datetime import date, datetime, timedelta
+from datetime import date
 from game_base import GameBase
 from rating_output import RatingOutput
 from whr import Base, Evaluate
@@ -18,8 +18,6 @@ female = os.path.join(sys.path[0], 'data', 'female')
 native_name = os.path.join(sys.path[0], 'data', 'native_name')
 
 cur_date = (int(sys.argv[1][:4]), int(sys.argv[1][4:6]), int(sys.argv[1][6:8]))
-cur_date = date(cur_date[0], cur_date[1], cur_date[2]) - timedelta(1)
-cur_date = cur_date.year, cur_date.month, cur_date.day
 
 base = GameBase(cur_date=cur_date)
 
