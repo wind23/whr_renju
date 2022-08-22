@@ -66,10 +66,8 @@ class RatingOutput:
 
         self.n_games = len(self.base.games)
         self.n_players = len(
-            {game['black']
-             for game in self.base.games.values()}
-            | {game['white']
-               for game in self.base.games.values()})
+            {game['black'] for game in self.base.games.values()} |
+            {game['white'] for game in self.base.games.values()})
 
     def flag(self, doc, country, klass='flag'):
         return
@@ -592,9 +590,7 @@ class RatingOutput:
                                  'Active',
                                  value=self.rating_path,
                                  selected='selected')
-                            line('option',
-                                 'Gy1≥10',
-                                 value=self.rating_gy1_path)
+                            line('option', 'Gy1≥10', value=self.rating_gy1_path)
                             line('option', 'All', value=self.rating_all_path)
                         elif active_level == 2:
                             line('option', 'Active', value=self.rating_path)
@@ -605,9 +601,7 @@ class RatingOutput:
                             line('option', 'All', value=self.rating_all_path)
                         elif active_level == 0:
                             line('option', 'Active', value=self.rating_path)
-                            line('option',
-                                 'Gy1≥10',
-                                 value=self.rating_gy1_path)
+                            line('option', 'Gy1≥10', value=self.rating_gy1_path)
                             line('option',
                                  'All',
                                  value=self.rating_all_path,
@@ -851,13 +845,12 @@ class RatingOutput:
             if cur_city_id in ljcity_dict.keys():
                 city = ljcity_dict[cur_city_id]
             if is_active and is_established:
-                outputs.append(
-                    (player, rank, country_code, country, city, surname, name,
-                     native_name, rating + self.bias))
+                outputs.append((player, rank, country_code, country, city,
+                                surname, name, native_name, rating + self.bias))
             ljinfo_outputs.append(
                 (player, rank, country_code, country, city, surname, name,
-                 native_name, rating + self.bias, (is_active
-                                                   and is_established)))
+                 native_name, rating + self.bias, (is_active and
+                                                   is_established)))
 
         with open(ljinfo_name, 'w', encoding='utf-8') as fout:
             for player, rank, country_code, country, city, surname, name, native_name, rating, is_active in ljinfo_outputs:
@@ -885,11 +878,10 @@ class RatingOutput:
                 doc.stag('meta', charset='utf-8')
                 doc.stag('meta', ('http-equiv', "content-type"),
                          ('content', "text/html; charset=utf-8"))
-                doc.stag(
-                    'meta',
-                    name="viewport",
-                    content=
-                    "width=device-width, initial-scale=1, maximum-scale=1")
+                doc.stag('meta',
+                         name="viewport",
+                         content=
+                         "width=device-width, initial-scale=1, maximum-scale=1")
                 doc.asis('''    <!--[if lt IE 9]>
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->''')
@@ -1204,8 +1196,7 @@ class RatingOutput:
                     game_outputs.append([
                         round_, color, opponent_id, opponent_surname,
                         opponent_name, opponent_native_name, opponent_country,
-                        opponent_rating, opponent_female, result,
-                        output_game_id
+                        opponent_rating, opponent_female, result, output_game_id
                     ])
                 tournament_outputs.append([
                     tournament_id, tournament_name, tournament_end,
@@ -1242,6 +1233,79 @@ class RatingOutput:
                 doc.asis('<b>Gy1:</b> %d, <b>Gy2:</b> %d, <b>Gy5:</b> %d' %
                          (gy1, gy2, gy5))
             doc.asis('''<div id="chart1"></div>''')
+
+            with tag('table'):
+                with tag('tbody'):
+                    for tournament_id, tournament_name, tournament_end, rating_in_tournament, game_outputs in tournament_outputs:
+                        with tag('tr'):
+                            with tag('th', colspan='5'):
+                                line('a',
+                                     tournament_name,
+                                     href=self.tournament_path % tournament_id)
+                        with tag('tr'):
+                            line('th', 'Date', klass='second')
+                            line('td', tournament_end, colspan='2', klass='num')
+                            line('th', 'Rating', klass='second')
+                            line('td',
+                                 '%.2f' % round(rating_in_tournament, 2),
+                                 klass='num')
+                        with tag('tr'):
+                            line('th', 'Round')
+                            line('th', 'Color')
+                            line('th', 'Result')
+                            line('th', 'Opponent', colspan='2')
+                        for round_, color, opponent_id, opponent_surname, opponent_name, opponent_native_name, opponent_country, opponent_rating, opponent_female, result, output_game_id in game_outputs:
+                            with tag('tr'):
+                                line('td', round_, klass='num')
+                                line('td', color)
+                                if output_game_id is None:
+                                    if result == 1:
+                                        line('td', 'Win', klass='win')
+                                    elif result == 0:
+                                        line('td', 'Loss', klass='loss')
+                                    else:
+                                        line('td', 'Draw', klass='draw')
+                                else:
+                                    if result == 1:
+                                        with tag('td', klass='win'):
+                                            line('a',
+                                                 'Win',
+                                                 href=self.game_path %
+                                                 output_game_id)
+                                    elif result == 0:
+                                        with tag('td', klass='loss'):
+                                            line('a',
+                                                 'Loss',
+                                                 href=self.game_path %
+                                                 output_game_id)
+                                    else:
+                                        with tag('td', klass='draw'):
+                                            line('a',
+                                                 'Draw',
+                                                 href=self.game_path %
+                                                 output_game_id)
+                                with tag('td'):
+                                    self.flag(doc, opponent_country)
+                                    text(' ')
+                                    if not opponent_female:
+                                        line('a',
+                                             '%s %s' %
+                                             (opponent_surname, opponent_name),
+                                             href=self.player_path %
+                                             opponent_id,
+                                             title=opponent_native_name)
+                                    else:
+                                        line('a',
+                                             '%s %s' %
+                                             (opponent_surname, opponent_name),
+                                             href=self.player_path %
+                                             opponent_id,
+                                             klass='female',
+                                             title=opponent_native_name)
+                                line('td',
+                                     '%.2f' % round(opponent_rating, 2),
+                                     klass='num')
+
             doc.asis('''<script src="js/d3.min.js" charset="utf-8"></script>
 <script src="js/nv.d3.js"></script>            
 <script>
@@ -1308,80 +1372,6 @@ class RatingOutput:
     }
 
 </script>''' % rating_chart)
-            with tag('table'):
-                with tag('tbody'):
-                    for tournament_id, tournament_name, tournament_end, rating_in_tournament, game_outputs in tournament_outputs:
-                        with tag('tr'):
-                            with tag('th', colspan='5'):
-                                line('a',
-                                     tournament_name,
-                                     href=self.tournament_path % tournament_id)
-                        with tag('tr'):
-                            line('th', 'Date', klass='second')
-                            line('td',
-                                 tournament_end,
-                                 colspan='2',
-                                 klass='num')
-                            line('th', 'Rating', klass='second')
-                            line('td',
-                                 '%.2f' % round(rating_in_tournament, 2),
-                                 klass='num')
-                        with tag('tr'):
-                            line('th', 'Round')
-                            line('th', 'Color')
-                            line('th', 'Result')
-                            line('th', 'Opponent', colspan='2')
-                        for round_, color, opponent_id, opponent_surname, opponent_name, opponent_native_name, opponent_country, opponent_rating, opponent_female, result, output_game_id in game_outputs:
-                            with tag('tr'):
-                                line('td', round_, klass='num')
-                                line('td', color)
-                                if output_game_id is None:
-                                    if result == 1:
-                                        line('td', 'Win', klass='win')
-                                    elif result == 0:
-                                        line('td', 'Loss', klass='loss')
-                                    else:
-                                        line('td', 'Draw', klass='draw')
-                                else:
-                                    if result == 1:
-                                        with tag('td', klass='win'):
-                                            line('a',
-                                                 'Win',
-                                                 href=self.game_path %
-                                                 output_game_id)
-                                    elif result == 0:
-                                        with tag('td', klass='loss'):
-                                            line('a',
-                                                 'Loss',
-                                                 href=self.game_path %
-                                                 output_game_id)
-                                    else:
-                                        with tag('td', klass='draw'):
-                                            line('a',
-                                                 'Draw',
-                                                 href=self.game_path %
-                                                 output_game_id)
-                                with tag('td'):
-                                    self.flag(doc, opponent_country)
-                                    text(' ')
-                                    if not opponent_female:
-                                        line('a',
-                                             '%s %s' %
-                                             (opponent_surname, opponent_name),
-                                             href=self.player_path %
-                                             opponent_id,
-                                             title=opponent_native_name)
-                                    else:
-                                        line('a',
-                                             '%s %s' %
-                                             (opponent_surname, opponent_name),
-                                             href=self.player_path %
-                                             opponent_id,
-                                             klass='female',
-                                             title=opponent_native_name)
-                                line('td',
-                                     '%.2f' % round(opponent_rating, 2),
-                                     klass='num')
 
             title = '%s %s, %s' % (surname, name, country)
             dst = self.player_path % player_id
@@ -1402,12 +1392,15 @@ class RatingOutput:
                 continue
             name = tournament['name']
             country = self.base.countries[tournament['country']]['abbr']
+            country_name = self.base.countries[tournament['country']]['name']
             city = self.base.cities[tournament['city']]['name']
             ngames = len(games_for_tournaments[tournament_id])
             start = tournament['start']
             end = tournament['end']
-            outputs.append(
-                [tournament_id, name, country, city, ngames, start, end])
+            outputs.append([
+                tournament_id, name, country, country_name, city, ngames, start,
+                end
+            ])
         doc, tag, text, line = Doc().ttl()
         with tag('table'):
             with tag('tbody'):
@@ -1417,11 +1410,11 @@ class RatingOutput:
                     line('th', 'Games')
                     line('th', 'Start')
                     line('th', 'End')
-                for tournament_id, name, country, city, ngames, start, end in outputs:
+                for tournament_id, name, country, country_name, city, ngames, start, end in outputs:
                     with tag('tr'):
                         with tag('td'):
                             self.flag(doc, country)
-                            text(' %s' % city)
+                            text(' %s, %s' % (city, country_name))
                         with tag('td'):
                             line('a',
                                  name,
@@ -1489,9 +1482,8 @@ class RatingOutput:
                 round_outputs[round_].append([
                     black, black_surname, black_name, black_native_name,
                     black_country, black_rating, black_female, white,
-                    white_surname, white_name, white_native_name,
-                    white_country, white_rating, white_female, result,
-                    output_game_id
+                    white_surname, white_name, white_native_name, white_country,
+                    white_rating, white_female, result, output_game_id
                 ])
             round_outputs = sorted(round_outputs.items(),
                                    key=lambda x: self.base.round_to_key(x[0]))
@@ -1638,13 +1630,45 @@ class RatingOutput:
                     [player_id, country, surname, name, native_name, female])
             outputs.append([date_, date_outputs])
         doc, tag, text, line = Doc().ttl()
-        doc.asis(
-            '<link href="css/nv.d3.css" rel="stylesheet" type="text/css">')
+        doc.asis('<link href="css/nv.d3.css" rel="stylesheet" type="text/css">')
         if not female:
             line('h1', 'History Ratings of Top Renju Players')
         else:
             line('h1', 'History Ratings of Top Women Renju Players')
         doc.asis('''<div id="chart1"></div>''')
+
+        with tag('table'):
+            with tag('tbody'):
+                with tag('tr'):
+                    line('th', 'Year')
+                    line('th', '1st')
+                    line('th', '2nd')
+                    line('th', '3rd')
+                    line('th', '4th')
+                    line('th', '5th')
+                for date_, date_outputs in outputs:
+                    with tag('tr'):
+                        line('td', date_, klass='num')
+                        for player_id, country, surname, name, native_name, female in date_outputs:
+                            with tag('td'):
+                                self.flag(doc, country)
+                                text(' ')
+                                if not female:
+                                    line('a',
+                                         '%s %s' % (surname, name),
+                                         href=self.player_path % player_id,
+                                         title=native_name)
+                                else:
+                                    line('a',
+                                         '%s %s' % (surname, name),
+                                         href=self.player_path % player_id,
+                                         klass='female',
+                                         title=native_name)
+        with tag('p'):
+            doc.asis(
+                '<b>Note:</b> This table only contains players with <b>Gy1</b>&gt;0.'
+            )
+
         doc.asis('''<script src="js/d3.min.js" charset="utf-8"></script>
 <script src="js/nv.d3.js"></script>
 <script>
@@ -1694,37 +1718,6 @@ class RatingOutput:
     }
 
 </script>''' % ('\n        '.join(charts), '\n            '.join(players)))
-        with tag('table'):
-            with tag('tbody'):
-                with tag('tr'):
-                    line('th', 'Year')
-                    line('th', '1st')
-                    line('th', '2nd')
-                    line('th', '3rd')
-                    line('th', '4th')
-                    line('th', '5th')
-                for date_, date_outputs in outputs:
-                    with tag('tr'):
-                        line('td', date_, klass='num')
-                        for player_id, country, surname, name, native_name, female in date_outputs:
-                            with tag('td'):
-                                self.flag(doc, country)
-                                text(' ')
-                                if not female:
-                                    line('a',
-                                         '%s %s' % (surname, name),
-                                         href=self.player_path % player_id,
-                                         title=native_name)
-                                else:
-                                    line('a',
-                                         '%s %s' % (surname, name),
-                                         href=self.player_path % player_id,
-                                         klass='female',
-                                         title=native_name)
-        with tag('p'):
-            doc.asis(
-                '<b>Note:</b> This table only contains players with <b>Gy1</b>&gt;0.'
-            )
 
         if not female:
             title = 'History Ratings of Top Renju Players'
@@ -1744,11 +1737,10 @@ class RatingOutput:
                 doc.stag('meta', charset='utf-8')
                 doc.stag('meta', ('http-equiv', "content-type"),
                          ('content', "text/html; charset=utf-8"))
-                doc.stag(
-                    'meta',
-                    name="viewport",
-                    content=
-                    "width=device-width, initial-scale=1, maximum-scale=1")
+                doc.stag('meta',
+                         name="viewport",
+                         content=
+                         "width=device-width, initial-scale=1, maximum-scale=1")
                 doc.asis('''    <!--[if lt IE 9]>
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->''')
@@ -1802,8 +1794,8 @@ class RatingOutput:
                                 ('Home page', self.rating_path, True),
                                 ('Players', self.players_path, False),
                                 ('Tournaments', self.tournaments_path, False),
-                                ('History of Top players',
-                                 self.top_rating_path, False),
+                                ('History of Top players', self.top_rating_path,
+                                 False),
                                 ('History of Top Women',
                                  self.top_rating_women_path, False),
                                 ('Gomoku', self.gomoku_path, False)
