@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+import re
 import json
 from xml.etree import cElementTree as ElementTree
 
@@ -31,7 +32,9 @@ class GameBase():
                  tournament_names=None,
                  player_names=None):
         fin = open(input_file, encoding='utf-8', errors='replace')
-        str_xml = fin.read()
+        str_xml = re.sub(
+            r'(?:<move>.*</move>| (?:publisher|btime|wtime|opening|alt|swap)\=".*?")',
+            '', fin.read())
         fin.close()
         etree = ElementTree.fromstring(str_xml)
         countries = etree.find('countries')
@@ -40,12 +43,14 @@ class GameBase():
         players = etree.find('players')
         tournaments = etree.find('tournaments')
         games = etree.find('games')
+        del etree
 
         for country in countries:
             id_ = country.attrib['id']
             name = country.attrib['name']
             abbr = country.attrib['abbr']
             self.countries[id_] = {'name': name, 'abbr': abbr}
+        del countries
 
         city_name_map = {}
         if city_names:
@@ -61,6 +66,7 @@ class GameBase():
             if id_ in city_name_map.keys():
                 name = city_name_map[id_]
             self.cities[id_] = {'country': country, 'name': name}
+        del cities
 
         unrated_rule_list = set()
         if unrated_rules:
@@ -74,6 +80,7 @@ class GameBase():
             name = rule.attrib['name']
             if not id_ in unrated_rule_list:
                 self.rules[id_] = {'name': name}
+        del rules
 
         player_name_map = {}
         if player_names:
@@ -100,6 +107,7 @@ class GameBase():
                 'female': female,
                 'native_name': native_name
             }
+        del players
 
         unrated_tournament_list = set()
         if unrated_tournaments:
@@ -188,6 +196,7 @@ class GameBase():
                     'end': end,
                     'rule': rule
                 }
+        del tournaments
 
         for game in games:
             id_ = game.attrib['id']
@@ -218,6 +227,7 @@ class GameBase():
                 'white': white,
                 'result': result
             }
+        del games
 
     def read_additional_input(self, input_file):
         fin = open(input_file, 'r', encoding='utf-8')
