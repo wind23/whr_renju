@@ -1,6 +1,6 @@
 from datetime import date, timedelta
 import json
-from xml.etree import ElementTree
+from xml.etree import cElementTree as ElementTree
 
 # replace date.today
 
@@ -252,8 +252,7 @@ class GameBase():
                     'native_name': native_name
                 }
             elif type_ == 'tournament':
-                id_, name, country, city, start, end, rule = content.split(
-                    '\t')
+                id_, name, country, city, start, end, rule = content.split('\t')
                 start = list(map(int, start.split('-')))
                 if date(start[0], start[1], start[2]) <= self.date:
                     start = '%04d-%02d-%02d' % (start[0], start[1], start[2])
@@ -521,7 +520,7 @@ class GameBase():
                                      'end'], self.tournaments[t[0]]['start']))
             ret[player] = tournaments
             for tournament_id, game_list in tournaments:
-                game_list.sort(key=lambda gid: self.round_to_key(self.games[
-                    gid]['round']))
+                game_list.sort(
+                    key=lambda gid: self.round_to_key(self.games[gid]['round']))
         self.history_for_players_cache = ret
         return ret
