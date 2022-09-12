@@ -844,6 +844,8 @@ class RatingOutput:
                 country = ljcountry_dict[cur_country_id]
             if cur_city_id in ljcity_dict.keys():
                 city = ljcity_dict[cur_city_id]
+            if city == '?':
+                city = ''
             if is_active and is_established:
                 outputs.append((player, rank, country_code, country, city,
                                 surname, name, native_name, rating + self.bias))
