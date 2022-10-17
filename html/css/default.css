@@ -214,6 +214,11 @@ h6 {
 	text-align: right;
 }
 
+#content table td.graynum {
+	text-align: right;
+	color: #9f9f9f;
+}
+
 #content table td.cnum {
 	text-align: center;
 	white-space: nowrap;

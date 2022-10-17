@@ -107,7 +107,7 @@ class RatingOutput:
             self.gcount_cache = gcounts
         else:
             gcounts = self.gcount_cache
-        ratings = sorted(ratings.items(), key=lambda x: x[1], reverse=True)
+        ratings = sorted(ratings.items(), key=lambda x: x[1][0], reverse=True)
         outputs = []
         cur_rank = 0
         cur_rank_women = 0
@@ -116,6 +116,7 @@ class RatingOutput:
         top_rating = None
         top_rating_women = None
         for player, rating in ratings:
+            rating, uncertainty = rating
             cur_country_id = self.base.players[player]['country']
             country = self.base.countries[cur_country_id]['abbr']
             country_name = self.base.countries[cur_country_id]['name']
@@ -178,9 +179,9 @@ class RatingOutput:
             else:
                 rank = ''
             if ((not active_level > 0) or (is_active and is_established)):
-                outputs.append(
-                    (player, rank, country, country_name, surname, name,
-                     native_name, rating + self.bias, gy1, gy2, gy5, female))
+                outputs.append((player, rank, country, country_name, surname,
+                                name, native_name, rating + self.bias,
+                                uncertainty, gy1, gy2, gy5, female))
 
         if day == None:
             if active_level == 1:
@@ -736,10 +737,10 @@ class RatingOutput:
         with tag('table'):
             with tag('tbody'):
                 with tag('tr'):
-                    for entry in ('Rank', 'Player', 'Rating', 'Gy1', 'Gy2',
+                    for entry in ('Rank', 'Player', 'Rating', '±', 'Gy1', 'Gy2',
                                   'Gy5', 'Country/Region'):
                         line('th', entry)
-                for player, rank, country, country_name, surname, name, native_name, rating, gy1, gy2, gy5, female in outputs:
+                for player, rank, country, country_name, surname, name, native_name, rating, uncertainty, gy1, gy2, gy5, female in outputs:
                     with tag('tr'):
                         line('td', rank, klass='num')
                         with tag('td'):
@@ -757,6 +758,7 @@ class RatingOutput:
                                      klass='female',
                                      title=native_name)
                         line('td', '%d' % round(rating), klass='num')
+                        line('td', '%d' % round(uncertainty), klass='graynum')
                         line('td', gy1, klass='num')
                         line('td', gy2, klass='num')
                         line('td', gy5, klass='num')
@@ -782,7 +784,7 @@ class RatingOutput:
         else:
             gcounts = self.gcount_cache
 
-        ratings = sorted(ratings.items(), key=lambda x: x[1], reverse=True)
+        ratings = sorted(ratings.items(), key=lambda x: x[1][0], reverse=True)
         outputs = []
         ljinfo_outputs = []
         cur_rank = 0
@@ -818,6 +820,7 @@ class RatingOutput:
                         ljcity_dict[city_id] = ljcity
 
         for player, rating in ratings:
+            rating, uncertainty = rating
             cur_country_id = self.base.players[player]['country']
             country_code = self.base.countries[cur_country_id]['abbr']
             country = self.base.countries[cur_country_id]['name']
@@ -1081,11 +1084,12 @@ class RatingOutput:
         else:
             gcounts = self.gcount_cache
 
-        ratings = sorted(ratings.items(), key=lambda x: x[1], reverse=True)
+        ratings = sorted(ratings.items(), key=lambda x: x[1][0], reverse=True)
         outputs = []
         cur_rank = 0
 
         for player, rating in ratings:
+            rating, uncertainty = rating
             gy5 = gy5s[player]
             gcount = gcounts[player]
             is_established = (gcount >= 10)

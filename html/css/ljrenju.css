@@ -1,0 +1,37 @@
+﻿.tabRat2 {
+  border: 3px silver double;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.tabRat2 th {
+  background:#c7edcc;
+  padding: 2px;
+  border-bottom: silver solid 1px;
+}
+.tabRat2 td {
+  padding: 2px;
+  border: silver solid 1px;
+}
+.tabRat2 tr:nth-child(even) {
+  background-color: #E6E8FA;
+}
+.bgChn {
+  background-color: red;
+  color: yellow;
+  font-weight:700
+}
+.bgHok {
+  background-color: red;
+  color: #FFFFFF;
+  font-weight:700
+}
+.bgMac {
+  background-color: green;
+  color: #FFFFFF;
+  font-weight:700
+}
+.bgTpe {
+  background-color: #FFFFFF;
+  color: navy;
+  font-weight:700
+}

@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 import re
 import json
+import math
 from xml.etree import cElementTree as ElementTree
 
 # replace date.today
@@ -13,6 +14,7 @@ class GameBase():
             self.date = date.today()
         else:
             self.date = date(cur_date[0], cur_date[1], cur_date[2])
+        self.w2 = 0
         self.countries = {}
         self.cities = {}
         self.rules = {}
@@ -22,6 +24,9 @@ class GameBase():
         self.ratings = {}
         self.games_for_tournaments_cache = None
         self.history_for_players_cache = None
+
+    def set_w2(self, w2):
+        self.w2 = w2
 
     def read_xml(self,
                  input_file,
@@ -350,6 +355,7 @@ class GameBase():
         date_ = (self.date.year, self.date.month, self.date.day)
         save_objects = {
             'date': date_,
+            'w2': self.w2,
             'countries': self.countries,
             'cities': self.cities,
             'rules': self.rules,
@@ -368,6 +374,7 @@ class GameBase():
         fin.close()
         date_ = load_objects['date']
         self.date = date(date_[0], date_[1], date_[2])
+        self.w2 = load_objects['w2']
         self.countries = load_objects['countries']
         self.cities = load_objects['cities']
         self.rules = load_objects['rules']
@@ -419,8 +426,8 @@ class GameBase():
 
     def get_player_rating_on_day(self, player, day):
         ratings = self.ratings[player]
-        min_day, min_rating = None, None
-        max_day, max_rating = None, None
+        min_day, min_rating, min_std = None, None, None
+        max_day, max_rating, max_std = None, None, None
         if not player in self.ratings.keys():
             return 0.
         ratings = self.ratings[player]
@@ -429,19 +436,30 @@ class GameBase():
                 if (not min_day) or (ratings[i][0] >= min_day):
                     min_day = ratings[i][0]
                     min_rating = ratings[i][1]
+                    min_std = math.sqrt(
+                        ratings[i][2] / 100.) * 400. / math.log(10)
             if ratings[i][0] >= day:
                 if (not max_day) or (ratings[i][0] <= max_day):
                     max_day = ratings[i][0]
                     max_rating = ratings[i][1]
+                    max_std = math.sqrt(
+                        ratings[i][2] / 100.) * 400. / math.log(10)
         if not min_day:
             ret = None
         elif not max_day:
-            ret = min_rating
+            ret = (min_rating,
+                   math.sqrt(abs(min_day - day) * self.w2 + min_std**2))
         elif max_day <= min_day:
-            ret = max_rating
+            ret = (max_rating,
+                   math.sqrt(abs(max_day - day) * self.w2 + max_std**2))
         else:
-            ret = ((max_day - day) * min_rating +
-                   (day - min_day) * max_rating) * 1.0 / (max_day - min_day)
+            ret = (((max_day - day) * min_rating +
+                    (day - min_day) * max_rating) * 1.0 / (max_day - min_day),
+                   math.sqrt((max_day - day) * (day - min_day) /
+                             (max_day - min_day) * self.w2 +
+                             ((max_day - day) / (max_day - min_day) * min_std +
+                              (day - min_day) /
+                              (max_day - min_day) * max_std)**2))
         return ret
 
     def get_ratings_on_day(self, day):
