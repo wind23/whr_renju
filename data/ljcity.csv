@@ -7,17 +7,17 @@
 9	Riga	里加
 10	Helsinki	赫尔辛基
 11	Stockholm	斯德哥尔摩
-13	Jonkoping	延雪平
+13	Jönköping	延雪平
 14	Gothenburg	哥德堡
-15	Hogsjo	赫格舍
-16	Linkoping	林雪平
+15	Högsjö	赫格舍
+16	Linköping	林雪平
 18	Huskvarna	胡斯克瓦纳
 19	Arjeplog	阿尔耶普卢格
 20	Tampere	坦佩雷
 23	Shanghai	上海
 24	Beijing	北京
 25	Taipei	台北
-26	Warszawa	华沙
+26	Warsaw	华沙
 27	Tokyo	东京
 28	Kyoto	京都
 29	Osaka	大阪
@@ -37,13 +37,13 @@
 45	Kobe	神户
 46	Shiga	滋贺
 47	Yokohama	横滨
-49	Malmo	马尔默
+49	Malmö	马尔默
 50	Uppsala	乌普萨拉
 52	Voronezh	沃罗涅日
 53	Volgograd	伏尔加格勒
 54	Tomsk	托木斯克
 58	Lund	隆德
-59	Harnosand	海讷桑德
+59	Härnösand	海讷桑德
 61	Prague	布拉格
 62	Hradec Králové	赫拉德茨-克拉洛韦
 63	Brno	布尔诺
@@ -61,8 +61,8 @@
 80	Kaohsiung	高雄
 81	Taichung	台中
 82	Tainan	台南
-84	unknown	?
-85	unknown	?
+84	?	*
+85	?	*
 86	Tianjin	天津
 87	Shizuoka	静冈
 88	Aomori	青森
@@ -77,11 +77,11 @@
 101	Xiamen	福建
 102	Tartu	塔尔图
 103	Délegyháza	代莱吉哈佐
-104	unknown	?
+104	?	*
 106	Kameoka	龟冈
 109	Hirakata	枚方
 110	Yamaguchi	山口
-112	Yelets	叶列茨
+112	Elets	叶列茨
 114	Arao	荒尾
 115	Fushun	辽宁
 116	Hakone	箱根
@@ -106,9 +106,9 @@
 140	Chengdu	四川
 141	Heilongjiang	黑龙江
 145	Krasnoyarsk	克拉斯诺亚尔斯克
-147	Soderkoping	南雪平
-148	Orbyhus	厄比胡斯
-150	Umea	于默奥
+147	Söderköping	南雪平
+148	Örbyhus	厄比胡斯
+150	Umeå	于默奥
 152	Kishinev	基希讷乌
 153	Korop	科罗普
 155	Havířov	哈维若夫
@@ -139,7 +139,6 @@
 197	Ulyanovsk	乌里扬诺夫斯克
 199	Guangzhou	广东
 205	Shenyang	辽宁
-206	Tamamura	玉村
 207	Mito	水户
 208	Jiangsu	江苏
 209	Hamamatsu	滨松
@@ -164,7 +163,7 @@
 240	Yangzhou	江苏
 241	Shaanxi	陕西
 242	Nanjing	江苏
-243	Norrkoping	北雪平
+243	Norrköping	北雪平
 253	Sendai	仙台
 254	Shandong	山东
 255	Henan	河南
@@ -186,11 +185,13 @@
 311	Tangshan	河北
 328	Hainan	海南
 330	Lanzhou	甘肃
+337	Xi'an	陕西
 359	Chongqing	重庆
 372	Kunming	云南
 391	Haikou	海南
 397	Changsha	湖南
 401	Wuhan	湖北
+404	Quanzhou	福建
 406	Fuzhou	福建
 413	Jinhua	浙江
 417	Anqing	安徽
@@ -199,23 +200,25 @@
 423	Zhengzhou	河南
 428	Qingdao	山东
 437	Dezhou	山东
-443	unknown	?
-453	unknown	?
+443	?	*
+445	Shijiazhuang	河北
+453	?	*
 462	Chiba	千叶
 463	Shimizu	清水
 464	Almaty	阿尔木图
-473	Unknown	?
+473	?	*
 474	Saldus	萨尔杜斯
+476	?	*
 478	Yaroslavl	雅罗斯拉夫尔
 481	Novosibirsk	新西伯利亚
 482	Novokuznetsk	新库兹涅茨克
-487	unknown	?
+487	?	*
 491	Guangdong	广东
 493	Sichuan	四川
 494	Taoyuan	桃园
 495	Hsinchu	新竹
 496	Changhua	彰化
-498	Hualian	花莲
+498	Hualien	花莲
 499	Kotlas	科特拉斯
 505	Moscow Region	莫斯科州
 517	Velikiye Luki	大卢基
@@ -229,7 +232,7 @@
 553	Baoding	河北
 555	Jiangxi	江西
 556	Istanbul	伊斯坦布尔
-557	Mjolby	米约尔比
+557	Mjölby	米约尔比
 558	Yunlin	云林
 560	Zielona Góra	绿山城
 579	Macao	　
@@ -261,12 +264,20 @@
 625	Anji	浙江
 626	Huzhou	浙江
 628	Ningxia	宁夏
+629	Quzhou	浙江
 631	Shenzhen	广东
 633	Laagri	拉格里
 634	Luhansk	卢甘斯克
 641	Bobruysk	博布鲁伊斯克
 647	Hong Kong	　
 649	Handan	河北
+667	Siping	吉林
 675	Taizhou, Zhejiang	浙江
+676	Suqian	江苏
+712	Xiangyang	襄阳
+718	Suizhou	湖北
 729	Shantou	广东
-808	unknown	?
+796	?	*
+801	Xiantao	湖北
+808	?	*
+810	Nagasaki	长崎
