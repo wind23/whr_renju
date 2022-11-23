@@ -6,10 +6,9 @@ from whr import Base, Evaluate
 
 input_xml = os.path.join(sys.path[0], 'data', 'renjunet_v10_20191120.rif')
 save_json = os.path.join(sys.path[0], 'data', 'game_base_evaluate.json')
-unrated_rules = os.path.join(sys.path[0], 'data', 'unrated_rules')
 
-base = GameBase()
-base.read_xml(input_xml, unrated_rules=unrated_rules)
+base = GameBase('renju')
+base.read_xml(input_xml)
 base.save(save_json)
 
 train_games, evaluate_games = base.gen_games_evaluate_split(9, 1)

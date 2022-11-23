@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import math
 from datetime import date, timedelta, datetime, timezone
 from yattag import Doc, indent
 from xml.etree import ElementTree
@@ -11,6 +12,7 @@ class RatingOutput:
 
     def __init__(self, base, bias=1600.):
         self.base = base
+        self.rule_category = base.rule_category
         self.bias = bias
         self.top_players = {}
         self.top_players_women = {}
@@ -23,6 +25,12 @@ class RatingOutput:
         self.gy5_cache = {}
         self.gcount_cache = None
         self.save_path = sys.path[0]
+        self.start_year = {'1': 1989, '2': 2004}[self.rule_category]
+        self.women_start_year = {'1': 1997, '2': 2006}[self.rule_category]
+        self.html_path = {
+            '1': 'html_renju',
+            '2': 'html_gomoku'
+        }[self.rule_category]
         self.rating_path = 'index.html'
         self.rating_gy1_path = 'rating_gy1.html'
         self.rating_all_path = 'rating_all.html'
@@ -36,7 +44,10 @@ class RatingOutput:
         self.rating_gy1_country_date_path = 'rating_gy1_c%s_%04d%02d%02d.html'
         self.rating_all_country_date_path = 'rating_all_c%s_%04d%02d%02d.html'
         self.flag_path = 'flag/%s.svg'
-        self.game_path = 'https://www.renju.net/game/%s/'
+        self.game_path = {
+            '1': 'https://www.renju.net/game/%s/',
+            '2': 'https://www.renju.net/game/%s/'
+        }[self.rule_category]
         self.player_path = 'player_%s.html'
         self.players_path = 'players.html'
         self.players_json_path = 'players.json'
@@ -46,7 +57,20 @@ class RatingOutput:
         self.top_rating_women_path = 'top_women.html'
         self.ljrating_path = 'ljrating.html'
         self.sitemap_path = 'sitemap.xml'
-        self.gomoku_path = 'https://gomokurating.wind23.com/'
+        self.this_name = {'1': 'Renju', '2': 'Gomoku'}[self.rule_category]
+        self.other_name = {'1': 'Gomoku', '2': 'Renju'}[self.rule_category]
+        self.this_path = {
+            '1': 'https://rating.renju.net/',
+            '2': 'https://gomokurating.renju.net/'
+        }[self.rule_category]
+        self.other_path = {
+            '1': 'https://gomokurating.renju.net/',
+            '2': 'https://rating.renju.net/'
+        }[self.rule_category]
+        self.ua_ga = {
+            '1': 'UA-119927498-1',
+            '2': 'UA-173435487-1'
+        }[self.rule_category]
         self.ljinfo_name = 'ljinfo.csv'
         self.ljcountry_name = 'ljcountry.csv'
         self.ljcity_name = 'ljcity.csv'
@@ -141,7 +165,8 @@ class RatingOutput:
             if day is None:
                 women_start = True
             else:
-                women_start = (date(1970, 1, 1) + timedelta(day)).year >= 1997
+                women_start = (date(1970, 1, 1) +
+                               timedelta(day)).year >= self.women_start_year
             if (is_established and is_active) or (not active_level > 0):
                 cur_rank += 1
                 if women_start and female:
@@ -186,62 +211,62 @@ class RatingOutput:
         if day == None:
             if active_level == 1:
                 if country_id is None:
-                    title = 'Whole History Rating (WHR) of Active Renju Players'
+                    title = f'Whole History Rating (WHR) of Active {self.this_name} Players'
                     dst = self.rating_path
                 else:
-                    title = 'Whole History Rating (WHR) of Active Renju Players in %s' % (
+                    title = f'Whole History Rating (WHR) of Active {self.this_name} Players in %s' % (
                         self.base.countries[country_id]['name'])
                     dst = self.rating_country_path % country_id
             elif active_level == 2:
                 if country_id is None:
-                    title = 'Whole History Rating (WHR) of Active Renju Players (Gy1≥10)'
+                    title = f'Whole History Rating (WHR) of Active {self.this_name} Players (Gy1≥10)'
                     dst = self.rating_gy1_path
                 else:
-                    title = 'Whole History Rating (WHR) of Active Renju Players in %s (Gy1≥10)' % (
+                    title = f'Whole History Rating (WHR) of Active {self.this_name} Players in %s (Gy1≥10)' % (
                         self.base.countries[country_id]['name'])
                     dst = self.rating_gy1_country_path % country_id
             elif active_level == 0:
                 if country_id is None:
-                    title = 'Whole History Rating (WHR) of All Renju Players'
+                    title = f'Whole History Rating (WHR) of All {self.this_name} Players'
                     dst = self.rating_all_path
                 else:
-                    title = 'Whole History Rating (WHR) of All Renju Players in %s' % (
+                    title = f'Whole History Rating (WHR) of All {self.this_name} Players in %s' % (
                         self.base.countries[country_id]['name'])
                     dst = self.rating_all_country_path % country_id
         elif day != None:
             date_ = date(1970, 1, 1) + timedelta(day)
             if active_level == 1:
                 if country_id is None:
-                    title = 'Whole History Rating (WHR) of Active Renju Players (%04d-%02d-%02d)' % (
+                    title = f'Whole History Rating (WHR) of Active {self.this_name} Players (%04d-%02d-%02d)' % (
                         date_.year, date_.month, date_.day)
                     dst = self.rating_date_path % (date_.year, date_.month,
                                                    date_.day)
                 else:
-                    title = 'Whole History Rating (WHR) of Active Renju Players in %s (%04d-%02d-%02d)' % (
+                    title = f'Whole History Rating (WHR) of Active {self.this_name} Players in %s (%04d-%02d-%02d)' % (
                         self.base.countries[country_id]['name'], date_.year,
                         date_.month, date_.day)
                     dst = self.rating_country_date_path % (
                         country_id, date_.year, date_.month, date_.day)
             elif active_level == 2:
                 if country_id is None:
-                    title = 'Whole History Rating (WHR) of Active Renju Players (%04d-%02d-%02d) (Gy1≥10)' % (
+                    title = f'Whole History Rating (WHR) of Active {self.this_name} Players (%04d-%02d-%02d) (Gy1≥10)' % (
                         date_.year, date_.month, date_.day)
                     dst = self.rating_gy1_date_path % (date_.year, date_.month,
                                                        date_.day)
                 else:
-                    title = 'Whole History Rating (WHR) of Active Renju Players in %s (%04d-%02d-%02d) (Gy1≥10)' % (
+                    title = f'Whole History Rating (WHR) of Active {self.this_name} Players in %s (%04d-%02d-%02d) (Gy1≥10)' % (
                         self.base.countries[country_id]['name'], date_.year,
                         date_.month, date_.day)
                     dst = self.rating_gy1_country_date_path % (
                         country_id, date_.year, date_.month, date_.day)
             elif active_level == 0:
                 if country_id is None:
-                    title = 'Whole History Rating (WHR) of All Renju Players (%04d-%02d-%02d)' % (
+                    title = f'Whole History Rating (WHR) of All {self.this_name} Players (%04d-%02d-%02d)' % (
                         date_.year, date_.month, date_.day)
                     dst = self.rating_all_date_path % (date_.year, date_.month,
                                                        date_.day)
                 else:
-                    title = 'Whole History Rating (WHR) of All Renju Players in %s (%04d-%02d-%02d)' % (
+                    title = f'Whole History Rating (WHR) of All {self.this_name} Players in %s (%04d-%02d-%02d)' % (
                         self.base.countries[country_id]['name'], date_.year,
                         date_.month, date_.day)
                     dst = self.rating_all_country_date_path % (
@@ -253,7 +278,7 @@ class RatingOutput:
             f'<p><b>Last update:</b> { self.base.date.strftime("%Y-%m-%d") }, <b>Players:</b> { self.n_players }, <b>Games:</b> { self.n_games }</p>'
         )
         doc.asis(
-            '<p><b>Note:</b> This rating is calculated based on the <a href="https://www.remi-coulom.fr/WHR/">WHR algorithm</a> by Rémi Coulom, a similar approach as the <a href="https://www.goratings.org/en/">Go Ratings</a>. The core algorithm is based on the <a href="https://github.com/wind23/whr_renju">open-source code</a> on Github. The Elo version of the renju rating can be found <a href="http://renjuoffline.com/renju-rating/">here</a>.  Just for observing the variation of renju player ratings in a different view!</p>'
+            '<p><b>Note:</b> This rating is calculated based on the <a href="https://www.remi-coulom.fr/WHR/">WHR algorithm</a> by Rémi Coulom, a similar approach as the <a href="https://www.goratings.org/en/">Go Ratings</a>. The core algorithm is based on the <a href="https://github.com/wind23/whr_renju">open-source code</a> on Github.</p>'
         )
         with tag('p'):
             doc.asis('<b>History ratings: </b>')
@@ -327,7 +352,8 @@ class RatingOutput:
                                  value=self.rating_all_country_path %
                                  country_id)
                     cur_year = (date(1970, 1, 1) + timedelta(day)).year
-                for year in range(self.base.date.year - 1, 1988, -1):
+                for year in range(self.base.date.year - 1, self.start_year - 1,
+                                  -1):
                     if day != None and cur_year == year:
                         if active_level == 1:
                             if country_id is None:
@@ -893,15 +919,19 @@ class RatingOutput:
                 doc.stag(
                     'meta',
                     name="keywords",
-                    content="Renju, Renju rating, whole-history rating, WHR")
-                doc.stag('meta',
-                         name="description",
-                         content="Whole-history rating of Renju players")
+                    content=
+                    f"{self.this_name}, {self.this_name} rating, whole-history rating, WHR"
+                )
+                doc.stag(
+                    'meta',
+                    name="description",
+                    content=f"Whole-history rating of {self.this_name} players")
                 doc.stag('meta', name="author", content="Tianyi Hao")
                 doc.stag('meta',
                          name="copyright",
-                         content="%d Renju Rating" % self.base.date.year)
-                line('title', '%s - Renju Rating' % title)
+                         content=f"%d {self.this_name} Rating" %
+                         self.base.date.year)
+                line('title', f'%s - {self.this_name} Rating' % title)
                 with tag('script'):
                     doc.asis('''
         if (window.location.protocol != "file:") {
@@ -921,10 +951,10 @@ class RatingOutput:
             (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
             m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
             })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-            ga('create', 'UA-119927498-1', 'auto');
+            ga('create', '%s', 'auto');
             ga('send', 'pageview');
         }
-    ''')
+    ''' % self.ua_ga)
                 doc.stag('link',
                          href="css/ljrenju.css",
                          rel="stylesheet",
@@ -1005,7 +1035,7 @@ class RatingOutput:
                                          align='center',
                                          klass=klass)
 
-        fout = open(os.path.join(self.save_path, 'html', dst),
+        fout = open(os.path.join(self.save_path, self.html_path, dst),
                     'w',
                     encoding='utf-8')
         fout.write(indent(doc.getvalue()))
@@ -1106,7 +1136,7 @@ class RatingOutput:
         outputs.sort(key=lambda x: int(x[0]))
 
         dst = self.players_json_path
-        with open(os.path.join(self.save_path, 'html', dst),
+        with open(os.path.join(self.save_path, self.html_path, dst),
                   'w',
                   encoding='utf-8') as fout:
             json.dump(outputs, fout)
@@ -1127,6 +1157,11 @@ class RatingOutput:
             city = self.base.cities[player['city']]['name']
             cur_rating = ratings_player[-1][1] + self.bias
             cur_rank = self.rank.get(player_id, '-')
+            day = self.base.date_to_day(self.base.date)
+            max_day = ratings_player[-1][0]
+            max_std = math.sqrt(
+                ratings_player[-1][2] / 100.) * 400. / math.log(10)
+            std = math.sqrt(abs(max_day - day) * self.base.w2 + max_std**2)
             first_game = date(1970, 1, 1) + timedelta(ratings[player_id][0][0])
             last_game = date(1970, 1, 1) + timedelta(ratings[player_id][-1][0])
             top_rating_date, top_rating, _ = max(ratings_player,
@@ -1220,8 +1255,9 @@ class RatingOutput:
             with tag('p'):
                 doc.asis('<b>Place:</b> %s, %s' % (city, country))
             with tag('p'):
-                doc.asis('<b>Rating:</b> %.2f, <b>Rank:</b> %s' %
-                         (round(cur_rating, 2), cur_rank))
+                doc.asis(
+                    '<b>Rating:</b> %.2f, <b>Std:</b> %.2f, <b>Rank:</b> %s' %
+                    (round(cur_rating, 2), round(std, 2), cur_rank))
             with tag('p'):
                 doc.asis(
                     '<b>First game:</b> %04d-%02d-%02d, <b>Last game:</b> %04d-%02d-%02d'
@@ -1599,9 +1635,9 @@ class RatingOutput:
         for player in top_players:
             rating = self.base.ratings[player]
             if not female:
-                start_year = 1989
+                start_year = self.start_year
             else:
-                start_year = 1997
+                start_year = self.women_start_year
             str_chart = ''.join(
                 map(
                     lambda r: '{x: %d, y: %f}, ' %
@@ -1638,9 +1674,9 @@ class RatingOutput:
         doc, tag, text, line = Doc().ttl()
         doc.asis('<link href="css/nv.d3.css" rel="stylesheet" type="text/css">')
         if not female:
-            line('h1', 'History Ratings of Top Renju Players')
+            line('h1', f'History Ratings of Top {self.this_name} Players')
         else:
-            line('h1', 'History Ratings of Top Women Renju Players')
+            line('h1', f'History Ratings of Top Women {self.this_name} Players')
         doc.asis('''<div id="chart1"></div>''')
 
         with tag('table'):
@@ -1670,6 +1706,9 @@ class RatingOutput:
                                          href=self.player_path % player_id,
                                          klass='female',
                                          title=native_name)
+                        if len(date_outputs) < 5:
+                            for _ in range(5 - len(date_outputs)):
+                                line('td', '')
         with tag('p'):
             doc.asis(
                 '<b>Note:</b> This table only contains players with <b>Gy1</b>&gt;0.'
@@ -1726,10 +1765,10 @@ class RatingOutput:
 </script>''' % ('\n        '.join(charts), '\n            '.join(players)))
 
         if not female:
-            title = 'History Ratings of Top Renju Players'
+            title = f'History Ratings of Top {self.this_name} Players'
             dst = self.top_rating_path
         else:
-            title = 'History Ratings of Top Women Renju Players'
+            title = f'History Ratings of Top Women {self.this_name} Players'
             dst = self.top_rating_women_path
 
         weight = 0.9
@@ -1738,7 +1777,7 @@ class RatingOutput:
     def gen_html(self, dst, title, content, weight, head_script=None):
         doc, tag, text, line = Doc().ttl()
         doc.asis('<!DOCTYPE html>')
-        with tag('html', xmlns="http://www.w3.org/1999/xhtml"):
+        with tag(self.html_path, xmlns="http://www.w3.org/1999/xhtml"):
             with tag('head'):
                 doc.stag('meta', charset='utf-8')
                 doc.stag('meta', ('http-equiv', "content-type"),
@@ -1753,15 +1792,19 @@ class RatingOutput:
                 doc.stag(
                     'meta',
                     name="keywords",
-                    content="Renju, Renju rating, whole-history rating, WHR")
-                doc.stag('meta',
-                         name="description",
-                         content="Whole-history rating of Renju players")
+                    content=
+                    f"{self.this_name}, {self.this_name} rating, whole-history rating, WHR"
+                )
+                doc.stag(
+                    'meta',
+                    name="description",
+                    content=f"Whole-history rating of {self.this_name} players")
                 doc.stag('meta', name="author", content="Tianyi Hao")
                 doc.stag('meta',
                          name="copyright",
-                         content="%d Renju Rating" % self.base.date.year)
-                line('title', '%s - Renju Rating' % title)
+                         content=f"%d {self.this_name} Rating" %
+                         self.base.date.year)
+                line('title', f'%s - {self.this_name} Rating' % title)
                 if head_script:
                     doc.asis(head_script)
                 with tag('script'):
@@ -1783,10 +1826,10 @@ class RatingOutput:
             (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
             m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
             })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-            ga('create', 'UA-119927498-1', 'auto');
+            ga('create', '%s', 'auto');
             ga('send', 'pageview');
         }
-    ''')
+    ''' % self.ua_ga)
                 doc.stag('link',
                          href="css/default.css",
                          rel="stylesheet",
@@ -1804,7 +1847,7 @@ class RatingOutput:
                                  False),
                                 ('History of Top Women',
                                  self.top_rating_women_path, False),
-                                ('Gomoku', self.gomoku_path, False)
+                                (self.other_name, self.other_path, False)
                             ]:
                                 if is_first:
                                     with tag('li', klass="first"):
@@ -1823,14 +1866,14 @@ class RatingOutput:
                                 'Theme based on <a href="http://templated.co/genericblue">GenericBlue</a> designed by <a href="http://templated.co" rel="nofollow">TEMPLATED</a>.'
                             )
 
-        fout = open(os.path.join(self.save_path, 'html', dst),
+        fout = open(os.path.join(self.save_path, self.html_path, dst),
                     'w',
                     encoding='utf-8')
         fout.write(indent(doc.getvalue()))
         fout.close()
         self.pages.append((dst, weight))
 
-    def gen_sitemap(self, prefix):
+    def gen_sitemap(self):
         pages = sorted(self.pages, key=lambda p: (-p[1], p[0]))
         timestr = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S+00:00")
         dom = minidom.Document()
@@ -1843,7 +1886,7 @@ class RatingOutput:
             root.appendChild(url)
             loc = dom.createElement('loc')
             url.appendChild(loc)
-            loc_text = dom.createTextNode(prefix + dst)
+            loc_text = dom.createTextNode(self.this_path + dst)
             loc.appendChild(loc_text)
             lastmod = dom.createElement('lastmod')
             url.appendChild(lastmod)
@@ -1858,7 +1901,8 @@ class RatingOutput:
             priority_text = dom.createTextNode('%.1f' % weight)
             priority.appendChild(priority_text)
         xml_str = dom.toprettyxml(indent="\t", encoding='utf-8')
-        fout = open(os.path.join(self.save_path, 'html', self.sitemap_path),
+        fout = open(os.path.join(self.save_path, self.html_path,
+                                 self.sitemap_path),
                     'w',
                     encoding='utf-8')
         fout.write(xml_str.decode('utf-8'))

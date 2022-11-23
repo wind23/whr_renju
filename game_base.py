@@ -9,7 +9,8 @@ from xml.etree import cElementTree as ElementTree
 
 class GameBase():
 
-    def __init__(self, cur_date=None):
+    def __init__(self, rule_category, cur_date=None):
+        self.rule_category = rule_category
         if not cur_date:
             self.date = date.today()
         else:
@@ -32,7 +33,6 @@ class GameBase():
                  input_file,
                  rated_tournaments=None,
                  unrated_tournaments=None,
-                 unrated_rules=None,
                  city_names=None,
                  tournament_names=None,
                  player_names=None):
@@ -73,18 +73,12 @@ class GameBase():
             self.cities[id_] = {'country': country, 'name': name}
         del cities
 
-        unrated_rule_list = set()
-        if unrated_rules:
-            fin = open(unrated_rules, 'r')
-            for line in fin:
-                rule = line.strip()
-                unrated_rule_list.add(rule)
-            fin.close()
         for rule in rules:
             id_ = rule.attrib['id']
             name = rule.attrib['name']
-            if not id_ in unrated_rule_list:
-                self.rules[id_] = {'name': name}
+            category = rule.attrib['category']
+            if category == self.rule_category:
+                self.rules[id_] = {'name': name, 'category': category}
         del rules
 
         player_name_map = {}
@@ -186,12 +180,12 @@ class GameBase():
                 continue
             rule = tournament.attrib['rule']
             rated = bool(int(tournament.attrib['rated']))
-            if rule in unrated_rule_list:
-                rated = False
             if id_ in unrated_tournament_list:
                 rated = False
             if id_ in rated_tournament_list:
                 rated = True
+            if not rule in self.rules.keys():
+                rated = False
             if rated:
                 self.tournaments[id_] = {
                     'name': name,
@@ -248,8 +242,9 @@ class GameBase():
                 id_, country, name = content.split('\t')
                 self.cities[id_] = {'country': country, 'name': name}
             elif type_ == 'rule':
-                id_, name = content.split('\t')
-                self.rules[id_] = {'name': name}
+                id_, name, category = content.split('\t')
+                if category == self.rule_category:
+                    self.rules[id_] = {'name': name, 'category': category}
             elif type_ == 'player':
                 id_, name, surname, country, city = content.split('\t')
                 if id_ in self.players.keys():
@@ -278,6 +273,8 @@ class GameBase():
                     end = '%04d-%02d-%02d' % (end[0], end[1], end[2])
                 else:
                     continue
+                if not rule in self.rules.keys():
+                    continue
                 self.tournaments[id_] = {
                     'name': name,
                     'country': country,
@@ -291,64 +288,15 @@ class GameBase():
                     '\t')
                 if black == white:
                     continue
-                self.games[id_] = {
-                    'tournament': tournament,
-                    'round': round_,
-                    'rule': rule,
-                    'black': black,
-                    'white': white,
-                    'result': result
-                }
-        fin.close()
-
-    def read_female(self, female):
-        female_players = set()
-        female_tournaments = {}
-        fin = open(female, 'r')
-        for line in fin:
-            line = line.strip()
-            if not line:
-                continue
-            type_, content = line.split('\t', 1)
-            if type_ == 'player':
-                id_ = content
-                female_players.add(id_)
-            elif type_ == 'tournament':
-                id_, rounds = content.split('\t')
-                if rounds == '*':
-                    rounds = None
-                else:
-                    rounds = rounds.split(',')
-                female_tournaments[id_] = rounds
-        fin.close()
-        for player_id in female_players:
-            if player_id in self.players.keys():
-                self.players[player_id]['female'] = True
-        for game in self.games.values():
-            tournament_id = game['tournament']
-            if tournament_id in female_tournaments.keys():
-                rounds = female_tournaments[tournament_id]
-                if rounds is None:
-                    is_female = True
-                else:
-                    is_female = False
-                    for round_ in rounds:
-                        if game['round'].upper().startswith(round_):
-                            is_female = True
-                if is_female:
-                    self.players[game['black']]['female'] = True
-                    self.players[game['white']]['female'] = True
-
-    def read_native_name(self, native_name):
-        fin = open(native_name, 'r', encoding='utf-8')
-        for line in fin:
-            line = line.strip()
-            if not line:
-                continue
-            player_id, native_name = line.split('\t')
-            if native_name == '*':
-                continue
-            self.players[player_id]['native_name'] = native_name
+                if tournament in self.tournaments.keys():
+                    self.games[id_] = {
+                        'tournament': tournament,
+                        'round': round_,
+                        'rule': rule,
+                        'black': black,
+                        'white': white,
+                        'result': result
+                    }
         fin.close()
 
     def save(self, save_file):
@@ -356,6 +304,7 @@ class GameBase():
         save_objects = {
             'date': date_,
             'w2': self.w2,
+            'rule_category': self.rule_category,
             'countries': self.countries,
             'cities': self.cities,
             'rules': self.rules,
@@ -375,6 +324,7 @@ class GameBase():
         date_ = load_objects['date']
         self.date = date(date_[0], date_[1], date_[2])
         self.w2 = load_objects['w2']
+        self.rule_category = load_objects['rule_category']
         self.countries = load_objects['countries']
         self.cities = load_objects['cities']
         self.rules = load_objects['rules']
