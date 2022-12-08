@@ -61,8 +61,8 @@
 80	Kaohsiung	高雄
 81	Taichung	台中
 82	Tainan	台南
-84	?	*
-85	?	*
+84	?	　
+85	?	　
 86	Tianjin	天津
 87	Shizuoka	静冈
 88	Aomori	青森
@@ -77,7 +77,7 @@
 101	Xiamen	福建
 102	Tartu	塔尔图
 103	Délegyháza	代莱吉哈佐
-104	?	*
+104	?	　
 106	Kameoka	龟冈
 109	Hirakata	枚方
 110	Yamaguchi	山口
@@ -193,6 +193,7 @@
 401	Wuhan	湖北
 404	Quanzhou	福建
 406	Fuzhou	福建
+412	Shaoxing	浙江
 413	Jinhua	浙江
 417	Anqing	安徽
 419	Hefei	安徽
@@ -200,19 +201,19 @@
 423	Zhengzhou	河南
 428	Qingdao	山东
 437	Dezhou	山东
-443	?	*
+443	?	　
 445	Shijiazhuang	河北
-453	?	*
+453	?	　
 462	Chiba	千叶
 463	Shimizu	清水
 464	Almaty	阿尔木图
-473	?	*
+473	?	　
 474	Saldus	萨尔杜斯
-476	?	*
+476	?	　
 478	Yaroslavl	雅罗斯拉夫尔
 481	Novosibirsk	新西伯利亚
 482	Novokuznetsk	新库兹涅茨克
-487	?	*
+487	?	　
 491	Guangdong	广东
 493	Sichuan	四川
 494	Taoyuan	桃园
@@ -277,7 +278,7 @@
 712	Xiangyang	襄阳
 718	Suizhou	湖北
 729	Shantou	广东
-796	?	*
+796	?	　
 801	Xiantao	湖北
-808	?	*
+808	?	　
 810	Nagasaki	长崎
