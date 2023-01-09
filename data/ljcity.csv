@@ -139,6 +139,7 @@
 197	Ulyanovsk	乌里扬诺夫斯克
 199	Guangzhou	广东
 205	Shenyang	辽宁
+206	Tamamura	玉村
 207	Mito	水户
 208	Jiangsu	江苏
 209	Hamamatsu	滨松
@@ -228,7 +229,6 @@
 531	Kuusalu	库萨卢
 541	Nikolaevka	尼古拉耶夫卡
 542	Novorossiisk	新罗西斯克
-545	Kanazawa	金泽
 552	Toyota	丰田
 553	Baoding	河北
 555	Jiangxi	江西
@@ -282,3 +282,4 @@
 801	Xiantao	湖北
 808	?	　
 810	Nagasaki	长崎
+889	Ishikawa	石川
