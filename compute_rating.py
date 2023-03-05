@@ -8,7 +8,6 @@ from whr import Base, Evaluate
 
 input_xml = os.path.join(sys.path[0], 'data',
                          'renjunet_v10_%s.rif' % sys.argv[1])
-additional_input = os.path.join(sys.path[0], 'data', 'additional_input.txt')
 save_json = os.path.join(sys.path[0], 'data',
                          'game_base_%s_%s.json' % (sys.argv[1], sys.argv[2]))
 rated_tournaments = os.path.join(sys.path[0], 'data', 'rated_tournaments')
@@ -31,7 +30,6 @@ if not os.path.exists(save_json):
     base.read_xml(input_xml,
                   rated_tournaments=rated_tournaments,
                   unrated_tournaments=unrated_tournaments)
-    base.read_additional_input(additional_input)
     train_games = base.gen_games()
     w2 = 12.9
     virtual_games = 2
