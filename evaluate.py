@@ -4,10 +4,10 @@ import sys
 from game_base import GameBase
 from whr import Base, Evaluate
 
-input_xml = os.path.join(sys.path[0], 'data', 'renjunet_v10_20191120.rif')
-save_json = os.path.join(sys.path[0], 'data', 'game_base_evaluate.json')
+input_xml = os.path.join(sys.path[0], "data", "renjunet_v10_20191120.rif")
+save_json = os.path.join(sys.path[0], "data", "game_base_evaluate.json")
 
-base = GameBase('renju')
+base = GameBase("renju")
 base.read_xml(input_xml)
 base.save(save_json)
 
@@ -16,7 +16,7 @@ print(train_games)
 
 w2 = 12.9
 virtual_games = 2
-config = {'w2': w2, 'virtual_games': virtual_games}
+config = {"w2": w2, "virtual_games": virtual_games}
 whr_base = Base(config=config)
 whr_base.create_games(train_games)
 whr_base.iterate(100)
