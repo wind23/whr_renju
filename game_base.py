@@ -187,13 +187,14 @@ class GameBase:
                 continue
             rule = tournament.attrib["rule"]
             rated = bool(int(tournament.attrib["rated"]))
+            ordinary = int(tournament.attrib.get("type", "0")) == 0
             if id_ in unrated_tournament_list:
                 rated = False
             if id_ in rated_tournament_list:
                 rated = True
             if not rule in self.rules.keys():
                 rated = False
-            if rated:
+            if rated and ordinary:
                 self.tournaments[id_] = {
                     "name": name,
                     "country": country,
