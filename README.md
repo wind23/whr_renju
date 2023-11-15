@@ -15,4 +15,4 @@ After the database is ready, you can simply run:
 
     python compute_rating.py [yyyymmdd] [CATEGORY]
     
-Replace `[yyyymmdd]` with the same date as the database, such as `20210827`. `[CATEGORY]` is either `renju` or `gomoku`. Run the script, and the rating will be generated in the directory `html`.
+Replace `[yyyymmdd]` with the same date as the database, such as `20210827`. `[CATEGORY]` is either `renju` or `gomoku`. Run the script, and the rating will be generated in the directory `html_renju` or `html_gomoku`.
