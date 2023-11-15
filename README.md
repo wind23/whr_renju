@@ -9,10 +9,10 @@ To run the script, you need to have `Python 3`, with the package `whr` and `yatt
     pip install whr
     pip install yattag
     
-To compute the rating, at first, you need to download the database here: http://renju.net/downloads/games.php. The downloaded database will have a filename such as `renjunet_v10_20210827.rif`. Put this database into the directory `data`.
+To compute the rating, at first, you need to download the database here: https://www.renju.net/game/. The downloaded database will have a filename such as `renjunet_v10_20210827.rif`. Put this database into the directory `data`.
 
 After the database is ready, you can simply run:
 
-    python compute_rating.py [yyyymmdd]
+    python compute_rating.py [yyyymmdd] [CATEGORY]
     
-Replace `[yyyymmdd]` with the same date as the database, such as `20210827`. Run the script, and the rating will be generated in the directory `html`.
+Replace `[yyyymmdd]` with the same date as the database, such as `20210827`. `[CATEGORY]` is either `renju` or `gomoku`. Run the script, and the rating will be generated in the directory `html`.
