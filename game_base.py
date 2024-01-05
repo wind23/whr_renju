@@ -37,6 +37,7 @@ class GameBase:
         tournament_names=None,
         player_names=None,
     ):
+        disp_ids = {}
         fin = open(input_file, encoding="utf-8", errors="replace")
         str_xml = re.sub(
             r'(?:<move>.*</move>| (?:publisher|btime|wtime|opening|alt|swap)\=".*?")',
@@ -93,6 +94,7 @@ class GameBase:
             fin.close()
         for player in players:
             id_ = player.attrib["id"]
+            disp_id = player.attrib["disp_id"]
             name = player.attrib["name"]
             surname = player.attrib["surname"]
             if id_ in player_name_map.keys():
@@ -101,7 +103,8 @@ class GameBase:
             city = player.attrib["city"]
             female = int(player.attrib["gender"]) == 2
             native_name = player.attrib.get("native_name", "")
-            self.players[id_] = {
+            disp_ids[id_] = disp_id
+            self.players[disp_id] = {
                 "name": name,
                 "surname": surname,
                 "country": country,
@@ -215,8 +218,8 @@ class GameBase:
             if unrated:
                 continue
             rule = game.attrib["rule"]
-            black = game.attrib["black"]
-            white = game.attrib["white"]
+            black = disp_ids[game.attrib["black"]]
+            white = disp_ids[game.attrib["white"]]
             if black == white:
                 continue
             result = game.attrib["bresult"]
@@ -238,6 +241,7 @@ class GameBase:
                 "result": result,
             }
         del games
+        del disp_ids
 
     def read_additional_input(self, input_file):
         fin = open(input_file, "r", encoding="utf-8")
