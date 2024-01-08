@@ -1231,38 +1231,20 @@ class RatingOutput:
                                     klass = "bgMac"
                                 else:
                                     klass = None
-                                if not klass:
-                                    line("td", player, align="center")
-                                    if native_name:
-                                        line(
-                                            "td",
-                                            "%s %s (%s)" % (surname, name, native_name),
-                                        )
-                                    else:
-                                        line("td", "%s %s" % (surname, name))
-                                    line("td", country)
-                                    line("td", city)
-                                    line("td", "%d" % round(rating), align="center")
-                                else:
-                                    line("td", player, align="center", klass=klass)
-                                    if native_name:
-                                        line(
-                                            "td",
-                                            "%s %s (%s)" % (surname, name, native_name),
-                                            klass=klass,
-                                        )
-                                    else:
-                                        line(
-                                            "td", "%s %s" % (surname, name), klass=klass
-                                        )
-                                    line("td", country, klass=klass)
-                                    line("td", city, klass=klass)
+                                line("td", player, align="center")
+                                if native_name:
                                     line(
                                         "td",
-                                        "%d" % round(rating),
-                                        align="center",
-                                        klass=klass,
+                                        "%s %s (%s)" % (surname, name, native_name),
                                     )
+                                else:
+                                    line("td", "%s %s" % (surname, name))
+                                if not klass:
+                                    line("td", country)
+                                else:
+                                    line("td", country, klass=klass)
+                                line("td", city)
+                                line("td", "%d" % round(rating), align="center")
 
         fout = open(
             os.path.join(self.save_path, self.html_path, dst), "w", encoding="utf-8"
