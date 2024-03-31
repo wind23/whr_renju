@@ -9,7 +9,7 @@ To run the script, you need to have `Python 3`, with the package `whr` and `yatt
     pip install whr
     pip install yattag
     
-To compute the rating, at first, you need to download the database here: https://www.renju.net/game/. The downloaded database will have a filename such as `renjunet_v10_20210827.rif`. Put this database into the directory `data`.
+To compute the rating, at first, you need to download the database here: https://www.renju.net/game/. The downloaded database will have a filename such as `renjunet_v10_20240330.rif`. Put this database into the directory `data`.
 
 After the database is ready, you can simply run:
 

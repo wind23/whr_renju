@@ -402,12 +402,12 @@ class GameBase:
                 if (not min_day) or (ratings[i][0] >= min_day):
                     min_day = ratings[i][0]
                     min_rating = ratings[i][1]
-                    min_std = math.sqrt(ratings[i][2] / 100.0) * 400.0 / math.log(10)
+                    min_std = ratings[i][2]
             if ratings[i][0] >= day:
                 if (not max_day) or (ratings[i][0] <= max_day):
                     max_day = ratings[i][0]
                     max_rating = ratings[i][1]
-                    max_std = math.sqrt(ratings[i][2] / 100.0) * 400.0 / math.log(10)
+                    max_std = ratings[i][2]
         if not min_day:
             ret = None
         elif not max_day:

@@ -26,25 +26,22 @@ start_year = {"1": 1989, "2": 2004}[rule_category]
 
 base = GameBase(rule_category, cur_date=cur_date)
 
-if not os.path.exists(save_json):
-    base.read_xml(
-        input_xml,
-        rated_tournaments=rated_tournaments,
-        unrated_tournaments=unrated_tournaments,
-    )
-    train_games = base.gen_games()
-    w2 = 12.9
-    virtual_games = 2
-    base.set_w2(w2)
-    config = {"w2": w2, "virtual_games": virtual_games}
-    whr_base = Base(config=config)
-    whr_base.create_games(train_games)
-    whr_base.iterate(100)
-    ratings = whr_base.get_ordered_ratings()
-    base.set_ratings(ratings)
-    base.save(save_json)
-else:
-    base.load(save_json)
+base.read_xml(
+    input_xml,
+    rated_tournaments=rated_tournaments,
+    unrated_tournaments=unrated_tournaments,
+)
+train_games = base.gen_games()
+w2 = {"1": 19.3, "2": 10.7}[rule_category]
+virtual_games = 2
+base.set_w2(w2)
+config = {"w2": w2, "virtual_games": virtual_games}
+whr_base = Base(config=config)
+whr_base.create_games(train_games)
+whr_base.iterate_until_converge(verbose=False)
+ratings = whr_base.get_ordered_ratings()
+base.set_ratings(ratings)
+base.save(save_json)
 
 output = RatingOutput(base, bias=1900.0)
 

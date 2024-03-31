@@ -1197,7 +1197,14 @@ class RatingOutput:
 
                     with tag("table", align="center", klass="tabRat2"):
                         with tag("tr"):
-                            for entry in ("序号", "编号", "姓名", "国家(地区)", "城市", "等级分"):
+                            for entry in (
+                                "序号",
+                                "编号",
+                                "姓名",
+                                "国家(地区)",
+                                "城市",
+                                "等级分",
+                            ):
                                 line("th", entry)
                         for (
                             player,
@@ -1394,7 +1401,7 @@ class RatingOutput:
             cur_rank = self.rank.get(player_id, "-")
             day = self.base.date_to_day(self.base.date)
             max_day = ratings_player[-1][0]
-            max_std = math.sqrt(ratings_player[-1][2] / 100.0) * 400.0 / math.log(10)
+            max_std = ratings_player[-1][2]
             std = math.sqrt(abs(max_day - day) * self.base.w2 + max_std**2)
             first_game = date(1970, 1, 1) + timedelta(ratings[player_id][0][0])
             last_game = date(1970, 1, 1) + timedelta(ratings[player_id][-1][0])
