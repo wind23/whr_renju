@@ -143,6 +143,7 @@ class RatingOutput:
                     continue
             name = self.base.players[player]["name"]
             surname = self.base.players[player]["surname"]
+            birth = self.base.players[player]["birth"]
             native_name = self.base.players[player]["native_name"]
             female = self.base.players[player]["female"]
             gy1 = gy1s[player]
@@ -218,6 +219,7 @@ class RatingOutput:
                         country_name,
                         surname,
                         name,
+                        birth,
                         native_name,
                         rating + self.bias,
                         uncertainty,
@@ -928,6 +930,7 @@ class RatingOutput:
                         "Gy2",
                         "Gy5",
                         "Country/Region",
+                        "BY",
                     ):
                         line("th", entry)
                 for (
@@ -937,6 +940,7 @@ class RatingOutput:
                     country_name,
                     surname,
                     name,
+                    birth,
                     native_name,
                     rating,
                     uncertainty,
@@ -971,6 +975,7 @@ class RatingOutput:
                         line("td", gy2, klass="num")
                         line("td", gy5, klass="num")
                         line("td", country_name)
+                        line("td", birth.split("-")[0])
 
         weight = 1.0
         if day is not None:
@@ -1271,6 +1276,7 @@ class RatingOutput:
                 continue
             surname = player["surname"]
             name = player["name"]
+            birth = player["birth"]
             native_name = player["native_name"]
             female = player["female"]
             country = self.base.countries[player["country"]]["abbr"]
@@ -1286,6 +1292,7 @@ class RatingOutput:
                     player_id,
                     surname,
                     name,
+                    birth,
                     native_name,
                     country,
                     country_name,
@@ -1303,11 +1310,13 @@ class RatingOutput:
                     line("th", "Player")
                     line("th", "Rating")
                     line("th", "Games")
+                    line("th", "BY")
                     line("th", "Place")
                 for (
                     player_id,
                     surname,
                     name,
+                    birth,
                     native_name,
                     country,
                     country_name,
@@ -1338,6 +1347,7 @@ class RatingOutput:
                                 )
                         line("td", "%d" % round(rating), klass="num")
                         line("td", "%d" % gcount, klass="num")
+                        line("td", birth.split("-")[0])
                         line("td", city + ", " + country_name)
         title = "List of Players"
         dst = self.players_path
@@ -1393,6 +1403,7 @@ class RatingOutput:
             player = self.base.players[player_id]
             surname = player["surname"]
             name = player["name"]
+            birth = player["birth"]
             native_name = player["native_name"]
             country = self.base.countries[player["country"]]["name"]
             country_abbr = self.base.countries[player["country"]]["abbr"]
@@ -1516,6 +1527,9 @@ class RatingOutput:
                     doc.text(" %s %s (%s)" % (surname, name, native_name))
             with tag("p"):
                 doc.asis("<b>Place:</b> %s, %s" % (city, country))
+            if birth:
+                with tag("p"):
+                    doc.asis("<b>Birth:</b> %s" % birth)
             with tag("p"):
                 doc.asis(
                     "<b>Rating:</b> %.2f, <b>Std:</b> %.2f, <b>Rank:</b> %s"

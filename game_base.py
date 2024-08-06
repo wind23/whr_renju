@@ -102,6 +102,7 @@ class GameBase:
             country = player.attrib["country"]
             city = player.attrib["city"]
             female = int(player.attrib["gender"]) == 2
+            birth = player.attrib.get("birth", "")
             native_name = player.attrib.get("native_name", "")
             disp_ids[id_] = disp_id
             self.players[disp_id] = {
@@ -110,6 +111,7 @@ class GameBase:
                 "country": country,
                 "city": city,
                 "female": female,
+                "birth": birth,
                 "native_name": native_name,
             }
         del players
@@ -264,9 +266,11 @@ class GameBase:
                 id_, name, surname, country, city = content.split("\t")
                 if id_ in self.players.keys():
                     female = self.players[id_]["female"]
+                    birth = self.players[id_]["birth"]
                     native_name = self.players[id_]["native_name"]
                 else:
                     female = False
+                    birth = ""
                     native_name = ""
                 self.players[id_] = {
                     "name": name,
@@ -274,6 +278,7 @@ class GameBase:
                     "country": country,
                     "city": city,
                     "female": female,
+                    "birth": birth,
                     "native_name": native_name,
                 }
             elif type_ == "tournament":
