@@ -1,6 +1,10 @@
 .vscode
 __pycache__
-*.pyc
-additional_info
-generate_tournaments
+data/*.rif
+data/*.json
+html
+html_*
 gitpush.bat
+*.pyc
+*.rif
+*.gz

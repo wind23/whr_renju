@@ -111,6 +111,7 @@
 150	Umeå	于默奥
 152	Kishinev	基希讷乌
 153	Korop	科罗普
+154	Manyava	马尼亚瓦
 155	Havířov	哈维若夫
 156	Kraków	克拉科夫
 157	Taizhou, Jiangsu	江苏
@@ -130,6 +131,7 @@
 175	Zhenjiang	江苏
 176	Guangxi	广西
 177	Chungbuk	忠清北道
+180	Izhevsk	伊热夫斯克
 186	Bydgoszcz	比得哥什
 189	Katowice	卡托维兹
 190	Płock	普沃茨克
@@ -165,6 +167,8 @@
 241	Shaanxi	陕西
 242	Nanjing	江苏
 243	Norrköping	北雪平
+246	Vladivostok	符拉迪沃斯托克
+252	Tver	特维尔
 253	Sendai	仙台
 254	Shandong	山东
 255	Henan	河南
@@ -179,6 +183,7 @@
 272	Moriyama	守山
 276	Tatsuno	龙野
 278	Varberg	瓦尔贝里
+283	Dalian	辽宁
 295	Hulun Buir	内蒙古
 296	Qiqihar	黑龙江
 301	Changchun	吉林
@@ -189,6 +194,7 @@
 337	Xi'an	陕西
 359	Chongqing	重庆
 372	Kunming	云南
+390	Zhanjiang	广东
 391	Haikou	海南
 397	Changsha	湖南
 401	Wuhan	湖北
@@ -199,8 +205,10 @@
 417	Anqing	安徽
 419	Hefei	安徽
 420	Jiaxing	浙江
+421	Nanyang	河南
 423	Zhengzhou	河南
 428	Qingdao	山东
+431	Linyi	山东
 437	Dezhou	山东
 443	?	　
 445	Shijiazhuang	河北
@@ -222,6 +230,7 @@
 496	Changhua	彰化
 498	Hualien	花莲
 499	Kotlas	科特拉斯
+502	Wuxi	江苏
 505	Moscow Region	莫斯科州
 517	Velikiye Luki	大卢基
 529	Toyokawa	丰川
@@ -260,6 +269,7 @@
 610	Qinghai	青海
 611	Inner Mongolia	内蒙古
 613	Tibet	西藏
+618	Olaine	奥莱内
 622	Yamagata	山形
 623	Gangwon	江原
 625	Anji	浙江
@@ -269,17 +279,24 @@
 631	Shenzhen	广东
 633	Laagri	拉格里
 634	Luhansk	卢甘斯克
+635	Kursk	库尔斯克
 641	Bobruysk	博布鲁伊斯克
 647	Hong Kong	　
 649	Handan	河北
 667	Siping	吉林
+674	Lianyungang	江苏
 675	Taizhou, Zhejiang	浙江
 676	Suqian	江苏
 712	Xiangyang	襄阳
 718	Suizhou	湖北
+727	Xiangxi	湖南
 729	Shantou	广东
+774	Yulin, Shaanxi	陕西
 796	?	　
 801	Xiantao	湖北
+806	Sevastopol	塞瓦斯托波尔
 808	?	　
 810	Nagasaki	长崎
 889	Ishikawa	石川
+893	Saku	萨库
+897	Kuwana	桑名
