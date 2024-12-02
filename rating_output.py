@@ -88,7 +88,6 @@ class RatingOutput:
         )
 
     def flag(self, doc, country, klass="flag"):
-        return
         doc.stag("img", src=self.flag_path % country, klass=klass, alt=country)
 
     def gen_ratings(self, active_level=1, day=None, country_id=None):
