@@ -3,7 +3,7 @@ import sys
 import json
 import math
 from datetime import date, timedelta, datetime, timezone
-from yattag import Doc, indent
+from yattag import Doc
 from xml.etree import ElementTree
 from xml.dom import minidom
 
@@ -1340,7 +1340,7 @@ class RatingOutput:
         fout = open(
             os.path.join(self.save_path, self.html_path, dst), "w", encoding="utf-8"
         )
-        fout.write(indent(doc.getvalue()))
+        fout.write(doc.getvalue())
         fout.close()
 
     def gen_players(self):
