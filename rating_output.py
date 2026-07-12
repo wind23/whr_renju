@@ -90,6 +90,86 @@ class RatingOutput:
     def flag(self, doc, country, klass="flag"):
         doc.stag("img", src=self.flag_path % country, klass=klass, alt=country)
 
+    def compute_active_threshold(self):
+        ratings = self.base.get_ratings_latest()
+        gy1s = self.gy1_cache.get(None, None)
+        if gy1s == None:
+            gy1s = self.base.get_game_count_within_n_years_latest(1)
+            self.gy1_cache[None] = gy1s
+        gy5s = self.gy5_cache.get(None, None)
+        if gy5s == None:
+            gy5s = self.base.get_game_count_within_n_years_latest(5)
+            self.gy5_cache[None] = gy5s
+        gcounts = self.gcount_cache
+        if gcounts == None:
+            gcounts = self.base.get_game_count_so_far_latest()
+            self.gcount_cache = gcounts
+        else:
+            gcounts = self.gcount_cache
+
+        # 创建(uncertainty, is_active)对，方便后续处理
+        data_pairs = []
+        for player, rating in ratings.items():
+            rating, uncertainty = rating
+            gy1 = gy1s[player]
+            gy5 = gy5s[player]
+            gcount = gcounts[player]
+            if gcount < 10 or gy5 < 1:
+                continue
+            is_active = gy1 >= 10
+            data_pairs.append((uncertainty, is_active))
+
+        # 按uncertainty排序
+        data_pairs.sort()
+
+        # 添加一个哨兵值，确保最后一个真实阈值被评估
+        if data_pairs:
+            # 添加一个具有不同uncertainty值的哨兵
+            last_uncertainty = data_pairs[-1][0]
+            data_pairs.append((last_uncertainty + 1, False))
+
+        total_positive = sum(1 for _, is_active in data_pairs if is_active)
+        total_negative = len(data_pairs) - total_positive
+
+        # 初始状态：所有预测都为负
+        tp, fp = 0, 0
+        fn, tn = total_positive, total_negative
+
+        best_threshold = None
+        best_tpr_minus_fpr = -1
+        prev_uncertainty = None
+
+        # 逐个处理每个样本点作为潜在阈值
+        for uncertainty, is_active in data_pairs:
+            # 只在uncertainty变化时评估阈值
+            if uncertainty != prev_uncertainty and prev_uncertainty is not None:
+                # 计算当前阈值的指标
+                tpr = tp / total_positive if total_positive > 0 else 0
+                fpr = fp / total_negative if total_negative > 0 else 0
+                tpr_minus_fpr = tpr - fpr
+
+                # 更新最佳阈值
+                if tpr_minus_fpr > best_tpr_minus_fpr:
+                    best_tpr_minus_fpr = tpr_minus_fpr
+                    best_threshold = prev_uncertainty
+
+                print(
+                    f"threshold: {prev_uncertainty}, tpr: {tpr}, fpr: {fpr}, tpr - fpr: {tpr_minus_fpr}, best_threshold: {best_threshold}, best_tpr_minus_fpr: {best_tpr_minus_fpr}"
+                )
+
+            # 累积更新混淆矩阵
+            # 当前样本被分类为正例
+            if is_active:  # 实际为正
+                fn -= 1
+                tp += 1
+            else:  # 实际为负
+                tn -= 1
+                fp += 1
+
+            prev_uncertainty = uncertainty
+
+        return best_threshold
+
     def gen_ratings(self, active_level=1, day=None, country_id=None):
         if day == None:
             ratings = self.base.get_ratings_latest()

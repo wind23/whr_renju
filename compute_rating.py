@@ -45,6 +45,8 @@ base.save(save_json)
 
 output = RatingOutput(base, bias=1900.0)
 
+# print(output.compute_active_threshold())
+
 output.gen_ratings()
 cur_year = base.date.year
 if base.date.month == 12 and base.date.day == 31:
