@@ -1,3 +1,4 @@
+import gc
 import math
 import os
 import sys
@@ -42,6 +43,11 @@ whr_base.iterate_until_converge(verbose=False)
 ratings = whr_base.get_ordered_ratings()
 base.set_ratings(ratings)
 base.save(save_json)
+
+# 输出阶段不再需要 WHR 计算图与训练集, 提前释放, 避免其在整个出页过程中驻留
+del whr_base
+del train_games
+gc.collect()
 
 output = RatingOutput(base, bias=1900.0)
 

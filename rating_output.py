@@ -2415,7 +2415,7 @@ class RatingOutput:
         fout = open(
             os.path.join(self.save_path, self.html_path, dst), "w", encoding="utf-8"
         )
-        fout.write(indent(doc.getvalue()))
+        fout.write(doc.getvalue())
         fout.close()
         self.pages.append((dst, weight))
 

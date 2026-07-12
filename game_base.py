@@ -38,28 +38,6 @@ class GameBase:
         player_names=None,
     ):
         disp_ids = {}
-        fin = open(input_file, encoding="utf-8", errors="replace")
-        str_xml = re.sub(
-            r'(?:<move>.*</move>| (?:publisher|btime|wtime|opening|alt|swap)\=".*?")',
-            "",
-            fin.read(),
-        )
-        fin.close()
-        etree = ElementTree.fromstring(str_xml)
-        countries = etree.find("countries")
-        cities = etree.find("cities")
-        rules = etree.find("rules")
-        players = etree.find("players")
-        tournaments = etree.find("tournaments")
-        games = etree.find("games")
-        del etree
-
-        for country in countries:
-            id_ = country.attrib["id"]
-            name = country.attrib["name"]
-            abbr = country.attrib["abbr"]
-            self.countries[id_] = {"name": name, "abbr": abbr}
-        del countries
 
         city_name_map = {}
         if city_names:
@@ -68,22 +46,6 @@ class GameBase:
                 id_, name = line.strip().split("\t")
                 city_name_map[id_] = name
             fin.close()
-        for city in cities:
-            id_ = city.attrib["id"]
-            country = city.attrib["country"]
-            name = city.attrib["name"]
-            if id_ in city_name_map.keys():
-                name = city_name_map[id_]
-            self.cities[id_] = {"country": country, "name": name}
-        del cities
-
-        for rule in rules:
-            id_ = rule.attrib["id"]
-            name = rule.attrib["name"]
-            category = rule.attrib["category"]
-            if category == self.rule_category:
-                self.rules[id_] = {"name": name, "category": category}
-        del rules
 
         player_name_map = {}
         if player_names:
@@ -92,29 +54,6 @@ class GameBase:
                 id_, name, surname = line.strip().split("\t")
                 player_name_map[id_] = (name, surname)
             fin.close()
-        for player in players:
-            id_ = player.attrib["id"]
-            disp_id = player.attrib["disp_id"]
-            name = player.attrib["name"]
-            surname = player.attrib["surname"]
-            if id_ in player_name_map.keys():
-                name, surname = player_name_map[id_]
-            country = player.attrib["country"]
-            city = player.attrib["city"]
-            female = int(player.attrib["gender"]) == 2
-            birth = player.attrib.get("birth", "")
-            native_name = player.attrib.get("native_name", "")
-            disp_ids[id_] = disp_id
-            self.players[disp_id] = {
-                "name": name,
-                "surname": surname,
-                "country": country,
-                "city": city,
-                "female": female,
-                "birth": birth,
-                "native_name": native_name,
-            }
-        del players
 
         unrated_tournament_list = set()
         if unrated_tournaments:
@@ -137,113 +76,176 @@ class GameBase:
                 id_, name = line.strip().split("\t")
                 tournaments_name_map[id_] = name
             fin.close()
-        for tournament in tournaments:
-            id_ = tournament.attrib["id"]
-            name = tournament.attrib["name"]
-            if id_ in tournaments_name_map.keys():
-                name = tournaments_name_map[id_]
-            country = tournament.attrib["country"]
-            city = tournament.attrib["city"]
-            start = tournament.attrib["start"]
-            if not start:
-                continue
-            end = tournament.attrib["end"]
-            if not end:
-                continue
-            if start == "0000-00-00" and end == "0000-00-00":
-                year = int(tournament.attrib["year"])
-                month = int(tournament.attrib["month"])
-                start = "%04d-%02d-%02d" % (year, month, 1)
-                if month < 12:
-                    end = "%04d-%02d-%02d" % (
-                        year,
-                        month,
-                        (date(year, month + 1, 1) - timedelta(1)).day,
-                    )
-                else:
-                    end = "%04d-%02d-%02d" % (
-                        year,
-                        month,
-                        (date(year + 1, 1, 1) - timedelta(1)).day,
-                    )
-            elif start == "0000-00-00":
-                start = end
-            elif end == "0000-00-00":
-                end = start
-            if start > end:
-                start = end
-            start = list(map(int, start.split("-")))
-            if start[0] == 0:
-                continue
-            if start[2] == 0:
-                start[2] = 1
-            if date(start[0], start[1], start[2]) <= self.date:
-                start = "%04d-%02d-%02d" % (start[0], start[1], start[2])
-            else:
-                continue
-            end = list(map(int, end.split("-")))
-            if end[0] == 0:
-                continue
-            if end[2] == 0:
-                end[2] = 1
-            if date(end[0], end[1], end[2]) <= self.date:
-                end = "%04d-%02d-%02d" % (end[0], end[1], end[2])
-            else:
-                continue
-            rule = tournament.attrib["rule"]
-            rated = bool(int(tournament.attrib["rated"]))
-            ordinary = int(tournament.attrib.get("type", "0")) == 0
-            if id_ in unrated_tournament_list:
-                rated = False
-            if id_ in rated_tournament_list:
-                rated = True
-            if not rule in self.rules.keys():
-                rated = False
-            if rated and ordinary:
-                self.tournaments[id_] = {
-                    "name": name,
-                    "country": country,
-                    "city": city,
-                    "start": start,
-                    "end": end,
-                    "rule": rule,
-                }
-        del tournaments
 
-        for game in games:
-            id_ = game.attrib["id"]
-            tournament = game.attrib["tournament"]
-            if not tournament in self.tournaments.keys():
+        # 流式解析: 逐元素处理并立即 clear(), 避免整份 DOM 与字符串副本同时驻留内存
+        # (旧版 read()+re.sub()+fromstring() 会让原串/正则副本/全量 DOM 三份并存)。
+        # 文档顺序为 countries -> cities -> rules -> players -> tournaments -> games,
+        # 恰好满足依赖(rules 先于 tournaments, players 先于 games)。
+        section_tags = ("countries", "cities", "rules", "players", "tournaments", "games")
+        fin = open(input_file, encoding="utf-8", errors="replace")
+        for _event, elem in ElementTree.iterparse(fin, events=("end",)):
+            tag = elem.tag
+            if tag == "country":
+                self.countries[elem.attrib["id"]] = {
+                    "name": elem.attrib["name"],
+                    "abbr": elem.attrib["abbr"],
+                }
+            elif tag == "city":
+                id_ = elem.attrib["id"]
+                name = elem.attrib["name"]
+                if id_ in city_name_map.keys():
+                    name = city_name_map[id_]
+                self.cities[id_] = {"country": elem.attrib["country"], "name": name}
+            elif tag == "rule":
+                category = elem.attrib["category"]
+                if category == self.rule_category:
+                    self.rules[elem.attrib["id"]] = {
+                        "name": elem.attrib["name"],
+                        "category": category,
+                    }
+            elif tag == "player":
+                id_ = elem.attrib["id"]
+                name = elem.attrib["name"]
+                surname = elem.attrib["surname"]
+                if id_ in player_name_map.keys():
+                    name, surname = player_name_map[id_]
+                disp_id = elem.attrib["disp_id"]
+                disp_ids[id_] = disp_id
+                self.players[disp_id] = {
+                    "name": name,
+                    "surname": surname,
+                    "country": elem.attrib["country"],
+                    "city": elem.attrib["city"],
+                    "female": int(elem.attrib["gender"]) == 2,
+                    "birth": elem.attrib.get("birth", ""),
+                    "native_name": elem.attrib.get("native_name", ""),
+                }
+            elif tag == "tournament":
+                self._read_tournament_elem(
+                    elem,
+                    tournaments_name_map,
+                    unrated_tournament_list,
+                    rated_tournament_list,
+                )
+            elif tag == "game":
+                self._read_game_elem(elem, disp_ids)
+            elif tag not in section_tags:
+                # <move> 等无关元素跳过, 不做 clear (随其所属 game 一并释放)
                 continue
-            round_ = game.attrib.get("round", "")
-            unrated = int(game.attrib.get("unrated", "0"))
-            if unrated:
-                continue
-            rule = game.attrib["rule"]
-            black = disp_ids[game.attrib["black"]]
-            white = disp_ids[game.attrib["white"]]
-            if black == white:
-                continue
-            result = game.attrib["bresult"]
-            if not result:
-                continue
-            result = float(result)
-            if result == 1.0:
-                result = "B"
-            elif result == 0.5:
-                result = "D"
-            elif result == 0.0:
-                result = "W"
-            self.games[id_] = {
-                "tournament": tournament,
-                "round": round_,
-                "rule": rule,
-                "black": black,
-                "white": white,
-                "result": result,
-            }
-        del games
+            elem.clear()
+        fin.close()
         del disp_ids
+
+    def _read_tournament_elem(
+        self,
+        elem,
+        tournaments_name_map,
+        unrated_tournament_list,
+        rated_tournament_list,
+    ):
+        id_ = elem.attrib["id"]
+        name = elem.attrib["name"]
+        if id_ in tournaments_name_map.keys():
+            name = tournaments_name_map[id_]
+        country = elem.attrib["country"]
+        city = elem.attrib["city"]
+        start = elem.attrib["start"]
+        if not start:
+            return
+        end = elem.attrib["end"]
+        if not end:
+            return
+        if start == "0000-00-00" and end == "0000-00-00":
+            year = int(elem.attrib["year"])
+            month = int(elem.attrib["month"])
+            start = "%04d-%02d-%02d" % (year, month, 1)
+            if month < 12:
+                end = "%04d-%02d-%02d" % (
+                    year,
+                    month,
+                    (date(year, month + 1, 1) - timedelta(1)).day,
+                )
+            else:
+                end = "%04d-%02d-%02d" % (
+                    year,
+                    month,
+                    (date(year + 1, 1, 1) - timedelta(1)).day,
+                )
+        elif start == "0000-00-00":
+            start = end
+        elif end == "0000-00-00":
+            end = start
+        if start > end:
+            start = end
+        start = list(map(int, start.split("-")))
+        if start[0] == 0:
+            return
+        if start[2] == 0:
+            start[2] = 1
+        if date(start[0], start[1], start[2]) <= self.date:
+            start = "%04d-%02d-%02d" % (start[0], start[1], start[2])
+        else:
+            return
+        end = list(map(int, end.split("-")))
+        if end[0] == 0:
+            return
+        if end[2] == 0:
+            end[2] = 1
+        if date(end[0], end[1], end[2]) <= self.date:
+            end = "%04d-%02d-%02d" % (end[0], end[1], end[2])
+        else:
+            return
+        rule = elem.attrib["rule"]
+        rated = bool(int(elem.attrib["rated"]))
+        ordinary = int(elem.attrib.get("type", "0")) == 0
+        if id_ in unrated_tournament_list:
+            rated = False
+        if id_ in rated_tournament_list:
+            rated = True
+        if not rule in self.rules.keys():
+            rated = False
+        if rated and ordinary:
+            self.tournaments[id_] = {
+                "name": name,
+                "country": country,
+                "city": city,
+                "start": start,
+                "end": end,
+                "rule": rule,
+            }
+
+    def _read_game_elem(self, elem, disp_ids):
+        id_ = elem.attrib["id"]
+        tournament = elem.attrib["tournament"]
+        if not tournament in self.tournaments.keys():
+            return
+        round_ = elem.attrib.get("round", "")
+        unrated = int(elem.attrib.get("unrated", "0"))
+        if unrated:
+            return
+        rule = elem.attrib["rule"]
+        black = disp_ids[elem.attrib["black"]]
+        white = disp_ids[elem.attrib["white"]]
+        if black == white:
+            return
+        result = elem.attrib["bresult"]
+        if not result:
+            return
+        result = float(result)
+        if result == 1.0:
+            result = "B"
+        elif result == 0.5:
+            result = "D"
+        elif result == 0.0:
+            result = "W"
+        self.games[id_] = {
+            "tournament": tournament,
+            "round": round_,
+            "rule": rule,
+            "black": black,
+            "white": white,
+            "result": result,
+        }
 
     def read_additional_input(self, input_file):
         fin = open(input_file, "r", encoding="utf-8")
