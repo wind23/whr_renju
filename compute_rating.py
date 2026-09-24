@@ -4,12 +4,14 @@ import os
 import sys
 from datetime import date
 from game_base import GameBase
+from rating_config import RATINGS, domain
 from rating_output import RatingOutput
 from whr import Base, Evaluate
 
 input_xml = os.path.join(sys.path[0], "data", "renjunet_v10_%s.rif" % sys.argv[1])
+rating = sys.argv[2]
 save_json = os.path.join(
-    sys.path[0], "data", "game_base_%s_%s.json" % (sys.argv[1], sys.argv[2])
+    sys.path[0], "data", "game_base_%s_%s.json" % (sys.argv[1], rating)
 )
 rated_tournaments = os.path.join(sys.path[0], "data", "rated_tournaments")
 unrated_tournaments = os.path.join(sys.path[0], "data", "unrated_tournaments")
@@ -17,15 +19,9 @@ female = os.path.join(sys.path[0], "data", "female")
 native_name = os.path.join(sys.path[0], "data", "native_name")
 
 cur_date = (int(sys.argv[1][:4]), int(sys.argv[1][4:6]), int(sys.argv[1][6:8]))
+start_year = RATINGS[rating]["start_year"]
 
-if len(sys.argv) >= 3:
-    if sys.argv[2] == "renju":
-        rule_category = "1"
-    elif sys.argv[2] == "gomoku":
-        rule_category = "2"
-start_year = {"1": 1989, "2": 2004}[rule_category]
-
-base = GameBase(rule_category, cur_date=cur_date)
+base = GameBase(rating, cur_date=cur_date)
 
 base.read_xml(
     input_xml,
@@ -33,7 +29,7 @@ base.read_xml(
     unrated_tournaments=unrated_tournaments,
 )
 train_games = base.gen_games()
-w2 = {"1": 19.3, "2": 10.7}[rule_category]
+w2 = RATINGS[rating]["w2"]
 virtual_games = 2
 base.set_w2(w2)
 config = {"w2": w2, "virtual_games": virtual_games}
@@ -44,7 +40,8 @@ ratings = whr_base.get_ordered_ratings()
 base.set_ratings(ratings)
 base.save(save_json)
 
-# 输出阶段不再需要 WHR 计算图与训练集, 提前释放, 避免其在整个出页过程中驻留
+# The output stage does not need the WHR graph and the training games anymore;
+# release them early so they do not stay in memory during the whole generation.
 del whr_base
 del train_games
 gc.collect()
@@ -88,5 +85,9 @@ output.gen_tournament()
 output.gen_top_ratings()
 output.gen_top_ratings(female=True)
 output.gen_sitemap()
-if rule_category == "1":
+# GitHub Pages serves the site on the custom domain declared in this file
+cname = os.path.join(RATINGS[rating]["html_path"], "CNAME")
+with open(cname, "w", newline="\n") as fout:
+    fout.write(domain(rating))
+if rating == "renju":
     output.gen_ljratings()

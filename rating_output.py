@@ -7,10 +7,14 @@ from yattag import Doc
 from xml.etree import ElementTree
 from xml.dom import minidom
 
+from rating_config import RATINGS, other_ratings
+
 
 class RatingOutput:
     def __init__(self, base, bias=1600.0):
         self.base = base
+        self.rating = base.rating
+        config = RATINGS[self.rating]
         self.rule_category = base.rule_category
         self.bias = bias
         self.top_players = {}
@@ -24,9 +28,9 @@ class RatingOutput:
         self.gy5_cache = {}
         self.gcount_cache = None
         self.save_path = sys.path[0]
-        self.start_year = {"1": 1989, "2": 2004}[self.rule_category]
-        self.women_start_year = {"1": 1997, "2": 2006}[self.rule_category]
-        self.html_path = {"1": "html_renju", "2": "html_gomoku"}[self.rule_category]
+        self.start_year = config["start_year"]
+        self.women_start_year = config["women_start_year"]
+        self.html_path = config["html_path"]
         self.rating_path = "index.html"
         self.rating_gy1_path = "rating_gy1.html"
         self.rating_all_path = "rating_all.html"
@@ -53,17 +57,10 @@ class RatingOutput:
         self.top_rating_women_path = "top_women.html"
         self.ljrating_path = "ljrating.html"
         self.sitemap_path = "sitemap.xml"
-        self.this_name = {"1": "Renju", "2": "Gomoku"}[self.rule_category]
-        self.other_name = {"1": "Gomoku", "2": "Renju"}[self.rule_category]
-        self.this_path = {
-            "1": "https://rating.renju.net/",
-            "2": "https://gomokurating.renju.net/",
-        }[self.rule_category]
-        self.other_path = {
-            "1": "https://gomokurating.renju.net/",
-            "2": "https://rating.renju.net/",
-        }[self.rule_category]
-        self.ua_ga = {"1": "UA-119927498-1", "2": "UA-173435487-1"}[self.rule_category]
+        self.this_name = config["name"]
+        self.this_path = config["url"]
+        self.other_ratings = other_ratings(self.rating)
+        self.ua_ga = config["ua_ga"]
         self.ljinfo_name = "ljinfo.csv"
         self.ljcountry_name = "ljcountry.csv"
         self.ljcity_name = "ljcity.csv"
@@ -114,7 +111,7 @@ class RatingOutput:
     }
 
     def _rating_url(self, active_level=1, country_id=None, ymd=None):
-        """rating 页面文件名。ymd 为 None 表示"当前"，否则为 (year, month, day)。"""
+        """File name of a rating page. ymd None means "current", else (year, month, day)."""
         tpl = self._RATING_LEVEL[active_level]
         if ymd is None:
             if country_id is None:
@@ -148,7 +145,7 @@ class RatingOutput:
             line("option", label, value=url)
 
     def _gy(self, n, day=None):
-        """近 n 年对局数，按 day 缓存（day 为 None 表示最新）。"""
+        """Game count within the last n years, cached per day (day None means latest)."""
         cache = {1: self.gy1_cache, 2: self.gy2_cache, 5: self.gy5_cache}[n]
         if day not in cache:
             if day is None:
@@ -158,13 +155,13 @@ class RatingOutput:
         return cache[day]
 
     def _gcounts(self):
-        """累计对局数，全局缓存。"""
+        """Cumulative game count, cached globally."""
         if self.gcount_cache is None:
             self.gcount_cache = self.base.get_game_count_so_far_latest()
         return self.gcount_cache
 
     def _player_anchor(self, line, player_id, surname, name, native_name, female):
-        """棋手名字超链接（女子选手加 female 样式）。"""
+        """Player name link (female players get the female class)."""
         label = "%s %s" % (surname, name)
         href = self.player_path % player_id
         if female:
@@ -178,7 +175,7 @@ class RatingOutput:
         gy5s = self._gy(5)
         gcounts = self._gcounts()
 
-        # 创建(uncertainty, is_active)对，方便后续处理
+        # (uncertainty, is_active) pairs, sorted by uncertainty below
         data_pairs = []
         for player, rating in ratings.items():
             rating, uncertainty = rating
@@ -190,19 +187,19 @@ class RatingOutput:
             is_active = gy1 >= 10
             data_pairs.append((uncertainty, is_active))
 
-        # 按uncertainty排序
+        # sort by uncertainty
         data_pairs.sort()
 
-        # 添加一个哨兵值，确保最后一个真实阈值被评估
+        # sentinel, so that the last real threshold gets evaluated
         if data_pairs:
-            # 添加一个具有不同uncertainty值的哨兵
+            # sentinel with a distinct uncertainty value
             last_uncertainty = data_pairs[-1][0]
             data_pairs.append((last_uncertainty + 1, False))
 
         total_positive = sum(1 for _, is_active in data_pairs if is_active)
         total_negative = len(data_pairs) - total_positive
 
-        # 初始状态：所有预测都为负
+        # start with every sample predicted negative
         tp, fp = 0, 0
         fn, tn = total_positive, total_negative
 
@@ -210,16 +207,16 @@ class RatingOutput:
         best_tpr_minus_fpr = -1
         prev_uncertainty = None
 
-        # 逐个处理每个样本点作为潜在阈值
+        # walk the samples, each one a candidate threshold
         for uncertainty, is_active in data_pairs:
-            # 只在uncertainty变化时评估阈值
+            # only evaluate when the uncertainty changes
             if uncertainty != prev_uncertainty and prev_uncertainty is not None:
-                # 计算当前阈值的指标
+                # score the current threshold
                 tpr = tp / total_positive if total_positive > 0 else 0
                 fpr = fp / total_negative if total_negative > 0 else 0
                 tpr_minus_fpr = tpr - fpr
 
-                # 更新最佳阈值
+                # keep the best threshold so far
                 if tpr_minus_fpr > best_tpr_minus_fpr:
                     best_tpr_minus_fpr = tpr_minus_fpr
                     best_threshold = prev_uncertainty
@@ -228,12 +225,12 @@ class RatingOutput:
                     f"threshold: {prev_uncertainty}, tpr: {tpr}, fpr: {fpr}, tpr - fpr: {tpr_minus_fpr}, best_threshold: {best_threshold}, best_tpr_minus_fpr: {best_tpr_minus_fpr}"
                 )
 
-            # 累积更新混淆矩阵
-            # 当前样本被分类为正例
-            if is_active:  # 实际为正
+            # update the confusion matrix
+            # the current sample is predicted positive
+            if is_active:  # actually active
                 fn -= 1
                 tp += 1
-            else:  # 实际为负
+            else:  # actually inactive
                 tn -= 1
                 fp += 1
 
@@ -1750,7 +1747,7 @@ class RatingOutput:
                     line("div", "", id="header")
                     with tag("div", id="menu"):
                         with tag("ul"):
-                            for page_title, page_href, is_first in [
+                            menu = [
                                 ("Home page", self.rating_path, True),
                                 ("Players", self.players_path, False),
                                 ("Tournaments", self.tournaments_path, False),
@@ -1760,8 +1757,10 @@ class RatingOutput:
                                     self.top_rating_women_path,
                                     False,
                                 ),
-                                (self.other_name, self.other_path, False),
-                            ]:
+                            ]
+                            for name, url in self.other_ratings:
+                                menu.append((name, url, False))
+                            for page_title, page_href, is_first in menu:
                                 if is_first:
                                     with tag("li", klass="first"):
                                         line("a", page_title, href=page_href)

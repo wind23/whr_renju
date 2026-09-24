@@ -4,12 +4,17 @@ import json
 import math
 from xml.etree import cElementTree as ElementTree
 
+from rating_config import RATINGS, rating_of
+
 # replace date.today
 
 
 class GameBase:
-    def __init__(self, rule_category, cur_date=None):
-        self.rule_category = rule_category
+    def __init__(self, rating, cur_date=None):
+        config = RATINGS[rating]
+        self.rating = rating
+        self.rule_category = config["rule_category"]
+        self.blitz = config["blitz"]
         if not cur_date:
             self.date = date.today()
         else:
@@ -77,10 +82,11 @@ class GameBase:
                 tournaments_name_map[id_] = name
             fin.close()
 
-        # 流式解析: 逐元素处理并立即 clear(), 避免整份 DOM 与字符串副本同时驻留内存
-        # (旧版 read()+re.sub()+fromstring() 会让原串/正则副本/全量 DOM 三份并存)。
-        # 文档顺序为 countries -> cities -> rules -> players -> tournaments -> games,
-        # 恰好满足依赖(rules 先于 tournaments, players 先于 games)。
+        # Streaming parse: handle each element and clear() it right away, so that the
+        # whole DOM and a copy of the text never live in memory at the same time (the old
+        # read()+re.sub()+fromstring() kept three copies alive). The document order is
+        # countries -> cities -> rules -> players -> tournaments -> games, which is exactly
+        # the order the dependencies need (rules before tournaments, players before games).
         section_tags = ("countries", "cities", "rules", "players", "tournaments", "games")
         fin = open(input_file, encoding="utf-8", errors="replace")
         for _event, elem in ElementTree.iterparse(fin, events=("end",)):
@@ -130,7 +136,8 @@ class GameBase:
             elif tag == "game":
                 self._read_game_elem(elem, disp_ids)
             elif tag not in section_tags:
-                # <move> 等无关元素跳过, 不做 clear (随其所属 game 一并释放)
+                # unrelated elements like <move> are skipped without clear():
+                # they are freed together with the game they belong to
                 continue
             elem.clear()
         fin.close()
@@ -197,14 +204,17 @@ class GameBase:
             return
         rule = elem.attrib["rule"]
         rated = bool(int(elem.attrib["rated"]))
-        ordinary = int(elem.attrib.get("type", "0")) == 0
+        # type: 0 = ordinary, 1 = correspondence, 2 = blitz; a rating takes only one of
+        # them, and together with rated this is a hard condition (the two lists above
+        # only override rated, they cannot move a tournament into another category)
+        in_category = int(elem.attrib.get("type", "0")) == (2 if self.blitz else 0)
         if id_ in unrated_tournament_list:
             rated = False
         if id_ in rated_tournament_list:
             rated = True
         if not rule in self.rules.keys():
             rated = False
-        if rated and ordinary:
+        if rated and in_category:
             self.tournaments[id_] = {
                 "name": name,
                 "country": country,
@@ -327,7 +337,9 @@ class GameBase:
         save_objects = {
             "date": date_,
             "w2": self.w2,
+            "rating": self.rating,
             "rule_category": self.rule_category,
+            "blitz": self.blitz,
             "countries": self.countries,
             "cities": self.cities,
             "rules": self.rules,
@@ -348,6 +360,11 @@ class GameBase:
         self.date = date(date_[0], date_[1], date_[2])
         self.w2 = load_objects["w2"]
         self.rule_category = load_objects["rule_category"]
+        # files written before rating/blitz existed: look the key up from them
+        self.blitz = load_objects.get("blitz", False)
+        self.rating = load_objects.get("rating") or rating_of(
+            self.rule_category, self.blitz
+        )
         self.countries = load_objects["countries"]
         self.cities = load_objects["cities"]
         self.rules = load_objects["rules"]

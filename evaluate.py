@@ -2,18 +2,22 @@ import math
 import os
 import sys
 from game_base import GameBase
+from rating_config import RATINGS
 from whr import Base, Evaluate
+
+# Optional argument is a rating key (see rating_config.py), renju by default
+rating = sys.argv[1] if len(sys.argv) > 1 else "renju"
 
 input_xml = os.path.join(sys.path[0], "data", "renjunet_v10_20240330.rif")
 save_json = os.path.join(sys.path[0], "data", "game_base_evaluate.json")
 
-base = GameBase("1")
+base = GameBase(rating)
 base.read_xml(input_xml)
 base.save(save_json)
 
 train_games, evaluate_games = base.gen_games_evaluate_split(9, 1)
 
-w2 = 19.3
+w2 = RATINGS[rating]["w2"]
 virtual_games = 2
 config = {"w2": w2, "virtual_games": virtual_games}
 whr_base = Base(config=config)
